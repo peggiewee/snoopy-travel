@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>史努比旅遊提示詞生成器</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(160deg, #FFF4E8 0%, #FFF8F2 100%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 30px 16px 60px;
+  }
+
+  .header { text-align: center; margin-bottom: 24px; }
+  .logo { font-size: 54px; display: block; animation: bounce 2s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }
+  .agency-name { font-size: 11px; letter-spacing: 3px; color: #C07040; font-weight: 800; text-transform: uppercase; margin-top: 4px; }
+  h1 { font-size: 21px; font-weight: 900; color: #3B2A1A; margin-top: 4px; }
+  .subtitle { font-size: 12px; color: #A08060; margin-top: 4px; }
+
+  .card { background: white; border-radius: 24px; padding: 26px 22px; width: 100%; max-width: 540px; box-shadow: 0 6px 30px rgba(200,120,50,0.10); border: 2px solid #FFE0C0; margin-bottom: 18px; }
+  .card-title { font-size: 12px; font-weight: 900; color: #C07040; letter-spacing: 2px; text-transform: uppercase; border-left: 4px solid #FF8C42; padding-left: 10px; margin-bottom: 18px; }
+
+  /* 目的地 */
+  .dest-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .dest-btn { border: 2px solid #FFD0A0; border-radius: 12px; background: #FFF8F0; padding: 10px 6px; cursor: pointer; text-align: center; font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800; color: #7A5C3A; transition: all 0.18s; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .dest-btn .dest-flag { font-size: 22px; }
+  .dest-btn:hover { border-color: #FF8C42; background: #FFF0DC; }
+  .dest-btn.active { border-color: #FF6B1A; background: linear-gradient(135deg,#FFF0DC,#FFE4C4); color: #FF5C1A; box-shadow: 0 2px 10px rgba(255,100,30,0.2); }
+  .custom-dest { display: none; margin-bottom: 14px; }
+  .custom-dest.show { display: block; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 800; color: #7A5C3A; }
+  input, select, textarea { padding: 10px 12px; border: 2px solid #FFD0A0; border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 13px; color: #3B2A1A; background: #FFF8F0; outline: none; transition: border-color 0.2s; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: #FF8C42; }
+  textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+
+  .area-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .area-chip { font-size: 11px; font-weight: 800; color: #C07040; background: #FFF0DC; border: 1.5px solid #FFD0A0; border-radius: 20px; padding: 3px 10px; cursor: pointer; transition: all 0.15s; font-family: 'Nunito', sans-serif; }
+  .area-chip:hover { background: #FFE0C0; border-color: #FF8C42; color: #FF5C1A; }
+
+  .section-divider { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; color: #FF8C42; font-size: 12px; font-weight: 900; letter-spacing: 1px; }
+  .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: #FFE0C0; }
+
+  .flight-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; margin-bottom: 12px; }
+  .flight-arrow { text-align: center; font-size: 20px; padding-bottom: 10px; }
+
+  .days-badge { background: #FFF0DC; border: 2px dashed #FFB870; border-radius: 14px; padding: 12px 16px; text-align: center; font-size: 14px; font-weight: 800; color: #C07040; margin-bottom: 16px; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .days-badge .big { font-size: 26px; color: #FF6B1A; }
+
+  /* ── 每日行程設定 ── */
+  #scheduleSection { display: none; }
+  #scheduleSection.show { display: block; }
+
+  .day-schedule-row {
+    background: #FFF8F0; border: 2px solid #FFE0C0; border-radius: 16px;
+    padding: 14px 16px; margin-bottom: 10px; transition: border-color 0.2s;
+  }
+  .day-schedule-row.manual-mode { border-color: #FF8C42; }
+
+  .day-row-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  .day-row-title { font-size: 13px; font-weight: 900; color: #FF6B1A; }
+  .day-row-date { font-size: 11px; color: #A08060; font-weight: 700; margin-left: 6px; }
+
+  /* 切換開關 */
+  .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+  .toggle-label { font-size: 11px; font-weight: 800; color: #C07040; }
+  .toggle-switch { position: relative; width: 44px; height: 22px; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #FFD0A0; border-radius: 22px; transition: 0.25s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute;
+    height: 16px; width: 16px; left: 3px; bottom: 3px;
+    background: white; border-radius: 50%; transition: 0.25s;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: #FF8C42; }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+  .manual-input { display: none; margin-top: 8px; }
+  .manual-input.show { display: block; }
+
+  .manual-hint { font-size: 11px; color: #A08060; font-weight: 700; margin-bottom: 6px; }
+
+  /* 時間項目列 */
+  .time-items { display: flex; flex-direction: column; gap: 6px; }
+  .time-item-row { display: flex; gap: 8px; align-items: center; }
+  .time-item-row input[type="time"] { width: 100px; flex-shrink: 0; font-size: 12px; padding: 7px 8px; }
+  .time-item-row input[type="text"] { flex: 1; font-size: 12px; padding: 7px 10px; }
+  .remove-btn { background: none; border: 1.5px solid #FFD0A0; border-radius: 8px; width: 28px; height: 28px; cursor: pointer; color: #C07040; font-size: 14px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; font-family: 'Nunito', sans-serif; }
+  .remove-btn:hover { background: #FFE0C0; border-color: #FF8C42; }
+  .add-item-btn { background: none; border: 1.5px dashed #FFB870; border-radius: 10px; width: 100%; padding: 6px; cursor: pointer; color: #C07040; font-size: 12px; font-weight: 800; margin-top: 4px; font-family: 'Nunito', sans-serif; transition: all 0.15s; }
+  .add-item-btn:hover { background: #FFF0DC; border-color: #FF8C42; }
+
+  .auto-preview { font-size: 11.5px; color: #7A5C3A; line-height: 1.8; background: white; border-radius: 10px; padding: 8px 12px; border: 1px dashed #FFD0A0; margin-top: 4px; }
+  .auto-preview span { color: #C07040; font-weight: 800; }
+
+  .generate-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #FF8C42, #FF5C1A); color: white; border: none; border-radius: 16px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900; cursor: pointer; letter-spacing: 1px; box-shadow: 0 4px 14px rgba(255,100,30,0.35); transition: transform 0.15s, box-shadow 0.15s; }
+  .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,100,30,0.45); }
+  .generate-btn:active { transform: translateY(0); }
+
+  /* 結果 */
+  .result-wrapper { width: 100%; max-width: 540px; display: none; }
+  .result-wrapper.show { display: block; }
+  .agency-notice { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 6px 30px rgba(200,120,50,0.12); border: 2px solid #FFE0C0; margin-bottom: 16px; }
+  .notice-header { background: linear-gradient(135deg, #FF8C42, #FF5C1A); color: white; padding: 18px 22px 16px; }
+  .notice-header .agency-tag { font-size: 10px; letter-spacing: 3px; opacity: 0.85; font-weight: 800; }
+  .notice-header h2 { font-size: 20px; font-weight: 900; margin-top: 4px; }
+  .notice-header .notice-sub { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+  .notice-body { padding: 20px 22px; }
+  .info-row { display: flex; align-items: flex-start; gap: 10px; padding: 11px 0; border-bottom: 1px dashed #FFE0C0; font-size: 13px; color: #3B2A1A; }
+  .info-row:last-child { border-bottom: none; }
+  .info-icon { font-size: 16px; min-width: 20px; }
+  .info-label { font-weight: 900; color: #C07040; min-width: 68px; font-size: 12px; padding-top: 1px; }
+  .info-value { flex: 1; line-height: 1.7; }
+  .day-block { background: #FFF8F0; border-radius: 14px; padding: 14px 16px; margin-top: 10px; border-left: 4px solid #FF8C42; }
+  .day-title { font-size: 13px; font-weight: 900; color: #FF6B1A; margin-bottom: 8px; }
+  .day-item { font-size: 12.5px; color: #5A3E28; line-height: 2; display: flex; gap: 8px; }
+  .day-item .time-tag { color: #C07040; font-weight: 900; min-width: 38px; }
+
+  .prompt-section { background: white; border-radius: 20px; padding: 20px; border: 2px solid #FFE0C0; box-shadow: 0 4px 20px rgba(200,120,50,0.08); }
+  .prompt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .prompt-label { font-size: 12px; font-weight: 900; color: #C07040; letter-spacing: 1px; }
+  .copy-btn { background: #FF8C42; color: white; border: none; border-radius: 10px; padding: 6px 14px; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; cursor: pointer; transition: background 0.2s; }
+  .copy-btn:hover { background: #FF5C1A; }
+  .copy-btn.copied { background: #5BAD6F; }
+  .prompt-text { font-size: 12.5px; line-height: 1.9; color: #3B2A1A; white-space: pre-wrap; background: #FFF8F0; border-radius: 12px; padding: 14px; border: 1px solid #FFE5C8; }
+  .word-count { text-align: right; font-size: 11px; color: #B08060; font-weight: 700; margin-top: 8px; }
+  .error-msg { color: #E05030; font-size: 13px; font-weight: 700; text-align: center; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo">🐾</span>
+  <div class="agency-name">Snoopy Travel Agency · 史努比旅行社</div>
+  <h1>旅遊行程通知 ＆ 提示詞生成器</h1>
+  <div class="subtitle">選擇目的地 · 輸入航班 · 自訂每日行程</div>
+</div>
+
+<div class="card">
+  <div class="card-title">🌏 選擇旅遊目的地</div>
+  <div class="dest-grid">
+    <button class="dest-btn active" data-dest="釜山" data-airport="金海國際機場" data-areas="海雲台,南浦洞,西面,廣安里,機張" onclick="selectDest(this)"><span class="dest-flag">🇰🇷</span>釜山</button>
+    <button class="dest-btn" data-dest="首爾" data-airport="仁川國際機場" data-areas="明洞,弘大,江南,梨泰院,北村" onclick="selectDest(this)"><span class="dest-flag">🇰🇷</span>首爾</button>
+    <button class="dest-btn" data-dest="東京" data-airport="成田國際機場" data-areas="新宿,澀谷,淺草,銀座,原宿" onclick="selectDest(this)"><span class="dest-flag">🇯🇵</span>東京</button>
+    <button class="dest-btn" data-dest="大阪" data-airport="關西國際機場" data-areas="道頓堀,心齋橋,難波,梅田,新世界" onclick="selectDest(this)"><span class="dest-flag">🇯🇵</span>大阪</button>
+    <button class="dest-btn" data-dest="京都" data-airport="關西國際機場" data-areas="祇園,嵐山,清水寺,伏見稻荷,金閣寺" onclick="selectDest(this)"><span class="dest-flag">🇯🇵</span>京都</button>
+    <button class="dest-btn" data-dest="沖繩" data-airport="那霸機場" data-areas="國際通,美浜,古宇利島,美麗海,首里" onclick="selectDest(this)"><span class="dest-flag">🇯🇵</span>沖繩</button>
+    <button class="dest-btn" data-dest="曼谷" data-airport="素萬那普機場" data-areas="暹羅,考山路,湄南河,芭提雅,恰圖恰" onclick="selectDest(this)"><span class="dest-flag">🇹🇭</span>曼谷</button>
+    <button class="dest-btn" data-dest="新加坡" data-airport="樟宜機場" data-areas="濱海灣,牛車水,小印度,烏節路,聖淘沙" onclick="selectDest(this)"><span class="dest-flag">🇸🇬</span>新加坡</button>
+    <button class="dest-btn" data-dest="custom" data-airport="" data-areas="" onclick="selectDest(this)"><span class="dest-flag">✏️</span>自訂</button>
+  </div>
+  <div class="custom-dest" id="customDest">
+    <div class="form-grid">
+      <div class="form-group"><label>🌍 城市名稱</label><input type="text" id="customCity" placeholder="例：上海、巴黎"></div>
+      <div class="form-group"><label>✈️ 機場名稱</label><input type="text" id="customAirport" placeholder="例：虹橋機場"></div>
+    </div>
+  </div>
+
+  <div class="section-divider">📅 旅遊日期</div>
+  <div class="form-grid">
+    <div class="form-group"><label>🛫 出發日期</label><input type="date" id="startDate"></div>
+    <div class="form-group"><label>🛬 回程日期</label><input type="date" id="endDate"></div>
+  </div>
+
+  <div class="section-divider">🛫 去程航班</div>
+  <div class="flight-row">
+    <div class="form-group"><label>台灣出發時間</label><input type="time" id="depTime" value="08:00"></div>
+    <div class="flight-arrow">✈️</div>
+    <div class="form-group"><label>抵達當地時間</label><input type="time" id="arrTime" value="10:30"></div>
+  </div>
+  <div class="form-grid"><div class="form-group full"><label>航班號碼（選填）</label><input type="text" id="depFlight" placeholder="例：BR156、CZ3096"></div></div>
+
+  <div class="section-divider">🛬 回程航班</div>
+  <div class="flight-row">
+    <div class="form-group"><label>當地出發時間</label><input type="time" id="retDepTime" value="18:00"></div>
+    <div class="flight-arrow">✈️</div>
+    <div class="form-group"><label>抵達台灣時間</label><input type="time" id="retArrTime" value="20:30"></div>
+  </div>
+  <div class="form-grid"><div class="form-group full"><label>航班號碼（選填）</label><input type="text" id="retFlight" placeholder="例：BR155、CZ3095"></div></div>
+
+  <div class="section-divider">🏨 住宿資訊</div>
+  <div class="form-grid">
+    <div class="form-group full"><label>🏨 飯店名稱（選填）</label><input type="text" id="hotelName" placeholder="例：海雲台格蘭德飯店"></div>
+    <div class="form-group full">
+      <label>📍 住宿區域（自由輸入）</label>
+      <input type="text" id="hotelArea" placeholder="例：海雲台">
+      <div class="area-chips" id="areaChips"></div>
+    </div>
+  </div>
+
+  <div id="daysBadge" class="days-badge">請選擇日期以計算天數 🐾</div>
+  <p class="error-msg" id="errorMsg">⚠️ 回程日期必須晚於出發日期！</p>
+
+  <!-- 每日行程設定 -->
+  <div id="scheduleSection" class="show">
+    <div class="section-divider">📋 每日行程設定</div>
+    <div id="dayRows"></div>
+  </div>
+
+  <br>
+  <button class="generate-btn" onclick="generate()">✨ 生成行程通知 ＆ 提示詞</button>
+</div>
+
+<div class="result-wrapper" id="resultWrapper">
+  <div class="agency-notice">
+    <div class="notice-header">
+      <div class="agency-tag">SNOOPY TRAVEL AGENCY · 行程確認通知單</div>
+      <h2 id="noticeTitle"></h2>
+      <div class="notice-sub" id="noticeSub"></div>
+    </div>
+    <div class="notice-body" id="noticeBody"></div>
+  </div>
+  <div class="prompt-section">
+    <div class="prompt-header">
+      <span class="prompt-label">📋 AI 地圖生成提示詞</span>
+      <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">複製</button>
+    </div>
+    <div class="prompt-text" id="promptText"></div>
+    <div class="word-count" id="wordCount"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const WEEKDAYS = ['日','一','二','三','四','五','六'];
+
+const DEST_DATA = {
+  '釜山': { airport:'金海國際機場', areas:['海雲台','南浦洞','西面','廣安里','機張'] },
+  '首爾': { airport:'仁川國際機場', areas:['明洞','弘大','江南','梨泰院','北村'] },
+  '東京': { airport:'成田國際機場', areas:['新宿','澀谷','淺草','銀座','原宿'] },
+  '大阪': { airport:'關西國際機場', areas:['道頓堀','心齋橋','難波','梅田','新世界'] },
+  '京都': { airport:'關西國際機場', areas:['祇園','嵐山','清水寺','伏見稻荷','金閣寺'] },
+  '沖繩': { airport:'那霸機場', areas:['國際通','美浜','古宇利島','美麗海','首里'] },
+  '曼谷': { airport:'素萬那普機場', areas:['暹羅','考山路','湄南河','芭提雅','恰圖恰'] },
+  '新加坡': { airport:'樟宜機場', areas:['濱海灣','牛車水','小印度','烏節路','聖淘沙'] },
+};
+
+const CITY_PLANS = {
+  '釜山': [
+    [{t:'08:30',txt:'🍳 飯店早餐'},{t:'09:30',txt:'📍 廣安里海灘 ＆ 廣安大橋'},{t:'12:00',txt:'🥣 豬肉湯飯'},{t:'14:00',txt:'📍 甘川文化村'},{t:'18:00',txt:'🍶 海鮮煎餅配馬格利'}],
+    [{t:'06:30',txt:'🦀 機張早市海鮮'},{t:'09:30',txt:'⛩️ 海東龍宮寺'},{t:'12:00',txt:'🐟 海鮮定食'},{t:'15:00',txt:'🌊 尾浦海岸'},{t:'18:30',txt:'🥩 西面烤肉街'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🏯 龍頭山公園 ＆ 釜山塔'},{t:'11:30',txt:'🦑 BIFF廣場魷魚餅'},{t:'13:00',txt:'🛍️ 國際市場掃貨'},{t:'19:00',txt:'🌃 海雲台夜市'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🚡 金剛公園纜車'},{t:'12:30',txt:'🧅 東萊蔥煎餅'},{t:'14:30',txt:'♨️ 溫泉場泡湯'},{t:'19:00',txt:'🍺 炸雞啤酒之夜'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'⛵ 太宗臺遊船'},{t:'12:00',txt:'🐡 刀魚定食'},{t:'14:00',txt:'🚡 松島海上纜車'},{t:'18:30',txt:'🐟 廣安里生魚片'}],
+  ],
+  '首爾': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🏯 景福宮 ＆ 韓服體驗'},{t:'12:00',txt:'🍜 北村午餐'},{t:'14:00',txt:'📍 仁寺洞文化街'},{t:'18:00',txt:'🥘 明洞烤肉晚餐'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:00',txt:'🎡 樂天世界'},{t:'12:30',txt:'🍱 蠶室午餐'},{t:'14:30',txt:'🛍️ 東大門設計廣場'},{t:'19:00',txt:'🌃 漢江夜景炸雞'}],
+    [{t:'08:00',txt:'☕ 弘大咖啡館早午餐'},{t:'10:00',txt:'🎨 弘大街頭文化'},{t:'13:00',txt:'🥙 梨泰院異國料理'},{t:'15:00',txt:'🛍️ 江南COEX購物'},{t:'19:00',txt:'🍺 炸雞啤酒'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'⛩️ 昌德宮秘苑'},{t:'12:00',txt:'🍤 鐘路傳統午餐'},{t:'14:00',txt:'🛕 曹溪寺'},{t:'19:00',txt:'🥘 部隊鍋晚餐'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🌿 南山首爾塔'},{t:'12:00',txt:'🍜 明洞刀削麵'},{t:'14:00',txt:'🛍️ 明洞購物'},{t:'18:00',txt:'🌃 清溪川夜景漫步'}],
+  ],
+  '東京': [
+    [{t:'08:30',txt:'🍵 築地早市 ＆ 早餐'},{t:'10:00',txt:'⛩️ 淺草寺 ＆ 仲見世通'},{t:'13:00',txt:'🍣 壽司午餐'},{t:'15:00',txt:'🗼 東京鐵塔'},{t:'18:30',txt:'🍜 拉麵晚餐'}],
+    [{t:'08:30',txt:'☕ 原宿表參道咖啡'},{t:'10:00',txt:'🛍️ 竹下通購物'},{t:'12:30',txt:'🍛 澀谷午餐'},{t:'14:00',txt:'🎮 秋葉原電器街'},{t:'18:30',txt:'🌃 新宿夜景'}],
+    [{t:'07:30',txt:'🍵 上野公園晨走'},{t:'09:30',txt:'🏛️ 東京國立博物館'},{t:'12:00',txt:'🍱 谷中銀座商店街'},{t:'14:30',txt:'📚 神保町古書街'},{t:'18:30',txt:'🍶 六本木居酒屋'}],
+    [{t:'08:00',txt:'🗻 富士山一日遊出發'},{t:'10:00',txt:'🌋 富士山五合目'},{t:'12:00',txt:'🍲 河口湖午餐'},{t:'14:30',txt:'🚤 河口湖遊船'},{t:'18:30',txt:'🎑 富士山夕陽'}],
+    [{t:'08:30',txt:'🍵 早餐'},{t:'09:30',txt:'🌸 新宿御苑散步'},{t:'12:00',txt:'🍜 新宿拉麵'},{t:'14:00',txt:'🎌 明治神宮'},{t:'18:00',txt:'🛍️ 銀座晚間購物'}],
+  ],
+  '大阪': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🏯 大阪城公園'},{t:'12:00',txt:'🍜 黑門市場午餐'},{t:'14:00',txt:'🎡 天保山摩天輪'},{t:'18:00',txt:'🦞 道頓堀海鮮晚餐'}],
+    [{t:'08:00',txt:'🐙 章魚燒早餐'},{t:'09:30',txt:'🛍️ 心齋橋掃貨'},{t:'12:00',txt:'🍣 迴轉壽司'},{t:'14:00',txt:'⚡ 電電城電器街'},{t:'18:00',txt:'🌃 難波夜市'}],
+    [{t:'08:30',txt:'🍵 早餐'},{t:'09:00',txt:'🦁 天王寺動物園'},{t:'11:30',txt:'🗼 通天閣'},{t:'13:00',txt:'🍢 新世界串炸'},{t:'18:30',txt:'🌉 梅田夜景'}],
+    [{t:'08:00',txt:'🌸 早起前往奈良'},{t:'09:30',txt:'🦌 奈良公園餵鹿'},{t:'11:00',txt:'⛩️ 東大寺'},{t:'13:00',txt:'🍵 奈良町午餐'},{t:'18:30',txt:'🍺 道頓堀居酒屋'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🎢 環球影城USJ'},{t:'12:30',txt:'🌭 園內午餐'},{t:'15:30',txt:'🎠 繼續遊樂'},{t:'19:00',txt:'🍜 難波晚餐'}],
+  ],
+  '京都': [
+    [{t:'07:00',txt:'🌅 伏見稻荷早晨參拜'},{t:'10:00',txt:'🍵 宇治抹茶體驗'},{t:'13:00',txt:'🍱 錦市場午餐'},{t:'15:00',txt:'🏯 二條城'},{t:'18:00',txt:'🌸 祇園花見小路'}],
+    [{t:'08:00',txt:'🍵 早餐'},{t:'09:00',txt:'🌿 嵐山竹林'},{t:'10:30',txt:'⛩️ 天龍寺庭園'},{t:'12:30',txt:'🍜 嵐山湯豆腐'},{t:'18:00',txt:'🌃 四條河原町夜遊'}],
+    [{t:'07:30',txt:'🌸 金閣寺晨訪'},{t:'09:30',txt:'🎨 龍安寺石庭'},{t:'11:30',txt:'🍣 北山午餐'},{t:'14:00',txt:'🌿 哲學之道漫步'},{t:'18:30',txt:'🍶 先斗町晚餐'}],
+    [{t:'08:30',txt:'🍵 茶道體驗'},{t:'10:30',txt:'👘 和服租借 ＆ 清水寺'},{t:'13:00',txt:'🍡 三年坂午餐'},{t:'17:00',txt:'🛍️ 寺町通購物'},{t:'19:00',txt:'🌙 高台寺夜間參觀'}],
+    [{t:'08:30',txt:'🍵 早餐'},{t:'09:30',txt:'🌸 平安神宮'},{t:'12:00',txt:'🍱 京野菜定食'},{t:'15:00',txt:'🎑 銀閣寺'},{t:'17:30',txt:'🌅 大文字山夕陽'}],
+  ],
+  '沖繩': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🐠 萬座毛海蝕洞'},{t:'12:00',txt:'🦞 海鮮丼'},{t:'14:00',txt:'🐟 美麗海水族館'},{t:'19:00',txt:'🍺 海鮮燒烤'}],
+    [{t:'08:00',txt:'🚤 古宇利島出發'},{t:'09:00',txt:'💙 古宇利大橋 ＆ 心形石'},{t:'12:00',txt:'🐚 島上海鮮午餐'},{t:'17:00',txt:'🌊 沙灘看夕陽'},{t:'19:00',txt:'🍜 國際通晚餐'}],
+    [{t:'08:30',txt:'🤿 早起浮潛課程'},{t:'11:00',txt:'🐠 珊瑚礁探索'},{t:'13:00',txt:'🦐 海鮮炒飯'},{t:'15:00',txt:'🏝️ 離島小旅'},{t:'18:00',txt:'🌺 BBQ晚餐'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🏯 首里城'},{t:'11:30',txt:'🍜 沖繩蕎麥麵'},{t:'13:30',txt:'🛍️ 牧志公設市場'},{t:'18:30',txt:'🌃 國際通夜市'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🚡 美浜美國村'},{t:'12:00',txt:'🍔 美式漢堡'},{t:'14:00',txt:'🛍️ 三井OUTLET'},{t:'19:00',txt:'🍺 泡盛酒品嚐'}],
+  ],
+  '曼谷': [
+    [{t:'08:00',txt:'🛶 昭披耶河快艇'},{t:'09:30',txt:'⛩️ 臥佛寺 ＆ 玉佛寺'},{t:'12:00',txt:'🍛 泰式炒河粉'},{t:'14:30',txt:'🏯 大皇宮'},{t:'18:00',txt:'🌃 考山路夜市'}],
+    [{t:'07:00',txt:'🌅 恰圖恰週末市集'},{t:'10:00',txt:'🛍️ 市集掃貨'},{t:'13:00',txt:'🥭 芒果糯米飯'},{t:'15:00',txt:'💆 泰式按摩'},{t:'18:30',txt:'🌙 暹羅廣場夜逛'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🐘 大象保育區'},{t:'13:00',txt:'🍜 當地小吃'},{t:'15:00',txt:'💆 SPA放鬆'},{t:'18:30',txt:'🍹 屋頂酒吧夕陽'}],
+    [{t:'07:30',txt:'🌊 芭達雅一日遊'},{t:'10:00',txt:'🐠 珊瑚島浮潛'},{t:'13:00',txt:'🦞 海鮮大餐'},{t:'15:30',txt:'🏖️ 芭達雅海灘'},{t:'19:00',txt:'🎭 人妖秀表演'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🚤 湄南河遊船'},{t:'11:00',txt:'🕌 鄭王廟'},{t:'13:00',txt:'🥘 水上市場午餐'},{t:'19:00',txt:'🌃 唐人街夜市'}],
+  ],
+  '新加坡': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🌿 濱海灣花園（超級樹）'},{t:'12:00',txt:'🦀 辣椒螃蟹'},{t:'14:30',txt:'🛍️ 烏節路購物'},{t:'18:30',txt:'🌅 金沙酒店空中花園'}],
+    [{t:'08:00',txt:'🍜 牛車水肉骨茶早餐'},{t:'09:30',txt:'🕌 牛車水唐人街'},{t:'11:30',txt:'🕌 小印度廟宇'},{t:'13:00',txt:'🍛 印度香料午餐'},{t:'18:30',txt:'🌃 克拉碼頭夜遊'}],
+    [{t:'08:30',txt:'🎡 聖淘沙島出發'},{t:'09:30',txt:'🎢 環球影城'},{t:'13:00',txt:'🌭 園內午餐'},{t:'16:00',txt:'🏖️ 西樂索海灘'},{t:'19:00',txt:'🌊 燈光水舞秀'}],
+    [{t:'07:30',txt:'🦁 新加坡動物園'},{t:'12:00',txt:'🍱 周邊午餐'},{t:'14:00',txt:'🛍️ 武吉知馬購物'},{t:'19:00',txt:'🦁 夜間動物園'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🌸 植物園（UNESCO）'},{t:'12:00',txt:'🍜 麥士威熟食中心'},{t:'14:00',txt:'🎨 國家美術館'},{t:'19:30',txt:'🌙 魚尾獅公園夜景'}],
+  ],
+};
+const DEFAULT_PLANS = [
+  [{t:'08:30',txt:'🍳 飯店早餐'},{t:'09:30',txt:'📍 當地知名景點'},{t:'12:00',txt:'🍜 道地午餐'},{t:'14:00',txt:'📍 下午景點 ＆ 文化體驗'},{t:'18:30',txt:'🌃 特色晚餐'}],
+  [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🛍️ 當地市集 ＆ 購物'},{t:'12:30',txt:'🍱 午餐'},{t:'14:30',txt:'📍 博物館 ＆ 文化區'},{t:'19:00',txt:'🌙 夜市探索'}],
+  [{t:'07:30',txt:'🌅 早起景點（人少）'},{t:'10:00',txt:'📍 特色街區漫遊'},{t:'13:00',txt:'🍜 午餐'},{t:'15:00',txt:'💆 當地體驗'},{t:'18:30',txt:'🍷 特色晚餐'}],
+];
+
+let currentDest = '釜山';
+let currentAreas = DEST_DATA['釜山'].areas;
+
+function selectDest(btn) {
+  document.querySelectorAll('.dest-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const isCustom = btn.dataset.dest === 'custom';
+  $('customDest').classList.toggle('show', isCustom);
+  currentDest = btn.dataset.dest;
+  currentAreas = isCustom ? [] : (DEST_DATA[currentDest]?.areas || []);
+  renderAreaChips(currentAreas);
+  $('hotelArea').value = '';
+  $('hotelArea').placeholder = currentAreas.length ? `例：${currentAreas[0]}` : '例：外灘、市中心';
+  rebuildDayRows();
+}
+
+function renderAreaChips(areas) {
+  const chips = $('areaChips');
+  chips.innerHTML = '';
+  areas.forEach(a => {
+    const chip = document.createElement('button');
+    chip.className = 'area-chip'; chip.textContent = a; chip.type = 'button';
+    chip.onclick = () => $('hotelArea').value = a;
+    chips.appendChild(chip);
+  });
+}
+
+// 日期工具
+function fmtFull(s) { const d=new Date(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（週${WEEKDAYS[d.getDay()]}）`; }
+function fmtMD(s) { const d=new Date(s); return `${d.getMonth()+1}月${d.getDate()}日（週${WEEKDAYS[d.getDay()]}）`; }
+function addDays(s,n) { const d=new Date(s); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
+function getDays() { if(!$('startDate').value||!$('endDate').value) return null; return Math.round((new Date($('endDate').value)-new Date($('startDate').value))/86400000)+1; }
+function hrOf(t){return parseInt(t.split(':')[0]);}
+function addT(t,m){const[h,mm]=t.split(':').map(Number),tot=h*60+mm+m;return`${String(Math.floor(tot/60)%24).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;}
+function subT(t,m){const[h,mm]=t.split(':').map(Number),tot=h*60+mm-m;return`${String(Math.floor((tot+1440)/60)%24).padStart(2,'0')}:${String(((tot%60)+60)%60).padStart(2,'0')}`;}
+
+$('startDate').addEventListener('change', () => { updateBadge(); rebuildDayRows(); });
+$('endDate').addEventListener('change', () => { updateBadge(); rebuildDayRows(); });
+$('arrTime').addEventListener('change', rebuildDayRows);
+$('retDepTime').addEventListener('change', rebuildDayRows);
+
+function updateBadge() {
+  const d = getDays();
+  $('errorMsg').style.display = 'none';
+  if (!d) { $('daysBadge').innerHTML = '請選擇日期以計算天數 🐾'; return; }
+  if (d <= 0) { $('daysBadge').innerHTML = '請選擇日期以計算天數 🐾'; $('errorMsg').style.display='block'; return; }
+  $('daysBadge').innerHTML = `共 <span class="big">${d}</span> 天 ${d-1} 夜旅程 🐾`;
+}
+
+// ── 自動行程預覽文字 ──
+function getAutoPreview(dayIndex, totalDays, arrTime, retDepTime, area, dest) {
+  if (totalDays === 1) return `${arrTime} 抵達 → Check-in → 輕鬆遊覽 → ${retDepTime} 機場`;
+  if (dayIndex === 0) {
+    const h = hrOf(arrTime);
+    if (h < 11) return `${arrTime} 抵達 → Check-in → 下午${area}景點 → 歡迎晚餐`;
+    if (h < 15) return `${arrTime} 抵達 → Check-in → ${area}商圈散策 → 特色晚餐`;
+    return `${arrTime} 抵達 → Check-in → ${area}夜市探索`;
+  }
+  if (dayIndex === totalDays - 1) {
+    const h = hrOf(retDepTime);
+    if (h < 12) return `早餐 → 退房 → 前往機場 → ${retDepTime} 回程`;
+    if (h < 17) return `早餐 → 伴手禮採購 → 午餐 → ${subT(retDepTime,150)} 前往機場`;
+    return `早餐 → 上午景點 → 午餐 → 採購 → ${subT(retDepTime,150)} 前往機場`;
+  }
+  const plans = CITY_PLANS[dest] || DEFAULT_PLANS;
+  const p = plans[(dayIndex - 1) % plans.length];
+  return p.map(x => x.txt.replace(/^[^\s]+ /,'')).slice(0,3).join(' → ') + ' → …';
+}
+
+// ── 建立每日行程列 ──
+function rebuildDayRows() {
+  const days = getDays();
+  const container = $('dayRows');
+  container.innerHTML = '';
+  if (!days || days <= 0) return;
+
+  const arrTime = $('arrTime').value || '10:00';
+  const retDepTime = $('retDepTime').value || '18:00';
+  const area = $('hotelArea').value || '當地';
+
+  for (let i = 0; i < days; i++) {
+    const dateStr = addDays($('startDate').value, i);
+    const isFirst = i === 0, isLast = i === days - 1;
+    const dayLabel = isFirst ? '抵達日' : isLast ? '回程日' : `Day ${i+1}`;
+    const preview = getAutoPreview(i, days, arrTime, retDepTime, area, currentDest);
+
+    const row = document.createElement('div');
+    row.className = 'day-schedule-row';
+    row.id = `dayRow_${i}`;
+    row.innerHTML = `
+      <div class="day-row-header">
+        <div><span class="day-row-title">Day ${i+1}${isFirst?' 🛬':isLast?' 🛫':''}</span><span class="day-row-date">${fmtMD(dateStr)}</span></div>
+        <div class="toggle-wrap">
+          <span class="toggle-label" id="toggleLabel_${i}">自動</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle_${i}" onchange="onToggle(${i})">
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:11px;font-weight:800;color:#C07040">手動</span>
+        </div>
+      </div>
+      <div class="auto-preview" id="autoPreview_${i}">✨ <span>自動產生：</span>${preview}</div>
+      <div class="manual-input" id="manualInput_${i}">
+        <div class="manual-hint">📝 輸入每個時間點的行程（可新增 / 刪除）</div>
+        <div class="time-items" id="timeItems_${i}"></div>
+        <button type="button" class="add-item-btn" onclick="addTimeItem(${i})">＋ 新增時間點</button>
+      </div>`;
+    container.appendChild(row);
+
+    // 預設一筆時間項目
+    addTimeItem(i, '09:00', '');
+  }
+}
+
+function onToggle(i) {
+  const isManual = $(`toggle_${i}`).checked;
+  $(`autoPreview_${i}`).style.display = isManual ? 'none' : 'block';
+  $(`manualInput_${i}`).classList.toggle('show', isManual);
+  $(`dayRow_${i}`).classList.toggle('manual-mode', isManual);
+}
+
+function addTimeItem(dayIndex, timeVal='', txtVal='') {
+  const container = $(`timeItems_${dayIndex}`);
+  const itemDiv = document.createElement('div');
+  itemDiv.className = 'time-item-row';
+  itemDiv.innerHTML = `
+    <input type="time" value="${timeVal}" placeholder="時間">
+    <input type="text" value="${txtVal}" placeholder="例：🏯 景福宮 ＆ 韓服體驗">
+    <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>`;
+  container.appendChild(itemDiv);
+}
+
+// ── 取得某天的行程資料 ──
+function getDayItems(dayIndex, totalDays, arrTime, retDepTime, area, dest) {
+  const isManual = $(`toggle_${dayIndex}`)?.checked;
+  if (isManual) {
+    const rows = $(`timeItems_${dayIndex}`)?.querySelectorAll('.time-item-row') || [];
+    const items = [];
+    rows.forEach(row => {
+      const t = row.querySelector('input[type="time"]').value;
+      const txt = row.querySelector('input[type="text"]').value.trim();
+      if (t && txt) items.push({t, txt});
+    });
+    return items.length ? items : [{t:'09:00', txt:'📍 自訂行程'}];
+  }
+  // 自動
+  if (totalDays === 1) return [
+    {t:arrTime,txt:`✈️ 抵達機場`},{t:addT(arrTime,90),txt:`🚌 Check-in`},
+    {t:'15:00',txt:`📍 輕鬆遊覽`},{t:subT(retDepTime,150),txt:`🚌 前往機場`},{t:retDepTime,txt:`✈️ 回程航班`}
+  ];
+  if (dayIndex === 0) {
+    const h = hrOf(arrTime);
+    if (h < 11) return [{t:arrTime,txt:`✈️ 抵達機場，辦理入境`},{t:addT(arrTime,90),txt:`🚌 ${area}飯店 Check-in`},{t:'14:00',txt:`📍 ${area}周邊景點初探`},{t:'18:00',txt:`🍜 歡迎晚餐`}];
+    if (h < 15) return [{t:arrTime,txt:`✈️ 抵達機場，辦理入境`},{t:addT(arrTime,90),txt:`🚌 ${area}飯店 Check-in`},{t:'17:00',txt:`🛍️ ${area}商圈散策`},{t:'19:00',txt:`🍽️ 特色晚餐`}];
+    return [{t:arrTime,txt:`✈️ 抵達機場，辦理入境`},{t:addT(arrTime,90),txt:`🚌 ${area}飯店 Check-in`},{t:'20:30',txt:`🌃 ${area}夜市探索 ＆ 晚餐`}];
+  }
+  if (dayIndex === totalDays - 1) {
+    const h = hrOf(retDepTime), ap = subT(retDepTime, 150);
+    if (h < 12) return [{t:'07:00',txt:'🍳 早餐後辦理退房'},{t:'08:00',txt:'🚌 前往機場'},{t:retDepTime,txt:'✈️ 回程航班，再見 🐾'}];
+    if (h < 17) return [{t:'08:00',txt:'🍳 享用早餐'},{t:'09:30',txt:'🛍️ 最後採購伴手禮'},{t:'12:00',txt:'🍜 最後午餐'},{t:ap,txt:'🚌 前往機場'},{t:retDepTime,txt:'✈️ 回程航班，再見 🐾'}];
+    return [{t:'08:00',txt:'🍳 早餐後辦理退房'},{t:'09:30',txt:'📍 上午輕鬆景點'},{t:'12:00',txt:'🍱 午餐'},{t:'14:00',txt:'🛍️ 伴手禮採購'},{t:ap,txt:'🚌 前往機場'},{t:retDepTime,txt:'✈️ 回程航班，再見 🐾'}];
+  }
+  const plans = CITY_PLANS[dest] || DEFAULT_PLANS;
+  return plans[(dayIndex - 1) % plans.length];
+}
+
+function getDestInfo() {
+  if (currentDest === 'custom') return { dest: $('customCity').value.trim()||'目的地', airport: $('customAirport').value.trim()||'當地機場' };
+  return { dest: currentDest, airport: DEST_DATA[currentDest]?.airport||'當地機場' };
+}
+
+function generate() {
+  const days = getDays();
+  if (!days || days <= 0) { $('errorMsg').style.display='block'; return; }
+  const info = getDestInfo();
+  const start=$('startDate').value, end=$('endDate').value;
+  const depTime=$('depTime').value, arrTime=$('arrTime').value;
+  const retDepTime=$('retDepTime').value, retArrTime=$('retArrTime').value;
+  const depFlight=$('depFlight').value.trim()||'航班待確認';
+  const retFlight=$('retFlight').value.trim()||'航班待確認';
+  const hotel=$('hotelName').value.trim()||`${info.dest}精選飯店`;
+  const area=$('hotelArea').value.trim()||info.dest;
+
+  $('noticeTitle').textContent = `史努比遊${info.dest} 🐾`;
+  $('noticeSub').textContent = `${fmtFull(start)} ～ ${fmtFull(end)}`;
+
+  let bodyHTML = `
+    <div class="info-row"><span class="info-icon">✈️</span><span class="info-label">去程航班</span><span class="info-value"><b>${depFlight}</b>｜${fmtFull(start)}<br>${depTime} 台灣出發 → ${arrTime} ${info.dest}${info.airport}抵達</span></div>
+    <div class="info-row"><span class="info-icon">✈️</span><span class="info-label">回程航班</span><span class="info-value"><b>${retFlight}</b>｜${fmtFull(end)}<br>${retDepTime} ${info.airport}出發 → ${retArrTime} 台灣抵達</span></div>
+    <div class="info-row"><span class="info-icon">🏨</span><span class="info-label">住宿飯店</span><span class="info-value"><b>${hotel}</b>（${area}）<br>Check-in：第一天抵達後｜Check-out：最後一天</span></div>
+    <div class="info-row" style="padding-bottom:0;border-bottom:none"><span class="info-icon">📅</span><span class="info-label">每日行程</span><span class="info-value"></span></div>`;
+
+  const promptDayLines = [];
+
+  for (let i = 0; i < days; i++) {
+    const dateStr = addDays(start, i);
+    const items = getDayItems(i, days, arrTime, retDepTime, area, currentDest);
+    const isManual = $(`toggle_${i}`)?.checked;
+
+    bodyHTML += `<div class="day-block"><div class="day-title">Day ${i+1}｜${fmtMD(dateStr)}${isManual?' 📝':' ✨'}</div>`;
+    items.forEach(it => { bodyHTML += `<div class="day-item"><span class="time-tag">${it.t}</span>${it.txt}</div>`; });
+    bodyHTML += `</div>`;
+
+    const summary = items.map(x=>`${x.t} ${x.txt}`).join('｜');
+    promptDayLines.push(`  Day${i+1}（${fmtMD(dateStr)}）：${summary}`);
+  }
+
+  bodyHTML += `<div class="info-row" style="margin-top:14px"><span class="info-icon">📌</span><span class="info-label">注意事項</span><span class="info-value">請於航班起飛前 <b>2–3 小時</b>抵達機場 · 行程如有異動以領隊通知為準 · 旅遊平安險請自行投保 · 祝旅途愉快 🐾</span></div>`;
+  $('noticeBody').innerHTML = bodyHTML;
+
+  const prompt = `用Peanuts史努比復古漫畫插畫風，繪製${info.dest}${days}天行程地圖，標題「史努比遊${info.dest} 🐾」，全程繁體中文標註。
+
+【旅遊日期】${fmtFull(start)} ～ ${fmtFull(end)}，共${days}天${days-1}夜
+【去程】${depFlight}｜${depTime}台灣出發 → ${arrTime}抵達${info.dest}${info.airport}
+【回程】${retFlight}｜${retDepTime}${info.airport} → ${retArrTime}抵台
+【住宿】${hotel}（${area}）
+
+【每日詳細行程】
+${promptDayLines.join('\n')}
+
+【地圖元素】
+・🕘 時間軸（早／午／晚，第1天從${arrTime}起，最後1天至${retDepTime}止）
+・🏠 住宿｜史努比狗屋圖示，標註「${hotel}」
+・🍜 美食｜史努比吃飯表情圖示
+・📍 景點｜史努比＆查理布朗遊覽縮圖
+
+每天用不同馬卡龍色塊區分，時間用史努比戴錶爪子標註，加入手繪虛線路線、Peanuts繁中對話框、Woodstock小鳥點綴，風格參考60年代Charles Schulz原版筆觸。`;
+
+  $('promptText').textContent = prompt;
+  $('wordCount').textContent = `字數：${prompt.replace(/\s/g,'').length} 字`;
+  $('resultWrapper').classList.add('show');
+  $('copyBtn').textContent = '複製';
+  $('copyBtn').classList.remove('copied');
+  setTimeout(() => $('resultWrapper').scrollIntoView({behavior:'smooth'}), 100);
+}
+
+function copyPrompt() {
+  navigator.clipboard.writeText($('promptText').textContent).then(() => {
+    $('copyBtn').textContent = '✅ 已複製';
+    $('copyBtn').classList.add('copied');
+    setTimeout(() => { $('copyBtn').textContent='複製'; $('copyBtn').classList.remove('copied'); }, 2000);
+  });
+}
+
+// 初始化
+renderAreaChips(currentAreas);
+$('hotelArea').placeholder = `例：${currentAreas[0]}`;
+</script>
+</body>
+</html>
