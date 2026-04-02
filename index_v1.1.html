@@ -32,22 +32,11 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(155deg,#FFF4E8 0
 .card-title{font-size:11px;font-weight:900;color:var(--tan);letter-spacing:2px;text-transform:uppercase;border-left:4px solid var(--or);padding-left:10px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
 
 /* DEST GRID */
-.dest-search-wrap{position:relative;margin-bottom:12px;}
-.dest-search-input{width:100%;padding:11px 44px 11px 14px;border:2px solid var(--bdrl);border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--br);background:var(--cr);outline:none;transition:border-color .2s;}
-.dest-search-input:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,140,66,.12);}
-.dest-search-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
-.dest-search-spinner{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:14px;animation:spin .8s linear infinite;display:none;}
-@keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
-.dest-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:2px solid var(--bdrl);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:999;overflow:hidden;display:none;}
-.dest-dropdown.show{display:block;}
-.dest-option{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--br);}
-.dest-option:hover{background:#FFF0DC;}
-.dest-option .opt-flag{font-size:20px;flex-shrink:0;}
-.dest-option .opt-city{font-weight:800;}
-.dest-option .opt-sub{font-size:11px;color:#A08060;margin-top:1px;}
-.dest-selected-badge{display:none;align-items:center;gap:8px;background:#FFF0DC;border:2px solid #FFB870;border-radius:10px;padding:8px 12px;margin-bottom:8px;font-size:13px;font-weight:800;color:var(--tan);}
-.dest-selected-badge.show{display:flex;}
-.dest-clear-btn{margin-left:auto;background:none;border:none;cursor:pointer;font-size:14px;color:#C07040;}
+.dest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
+.dest-btn{border:2px solid var(--bdrl);border-radius:11px;background:var(--cr);padding:9px 4px;cursor:pointer;text-align:center;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;color:#7A5C3A;transition:all .17s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.dest-btn .df{font-size:20px;}
+.dest-btn:hover{border-color:var(--or);background:#FFF0DC;}
+.dest-btn.active{border-color:var(--ord);background:linear-gradient(135deg,#FFF0DC,#FFE4C4);color:var(--ord);box-shadow:0 2px 8px rgba(255,100,30,.18);}
 .custom-dest{display:none;margin-bottom:12px;}
 .custom-dest.show{display:block;}
 
@@ -235,21 +224,16 @@ input:focus,select:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,14
 <!-- MAIN FORM CARD -->
 <div class="card">
   <div class="card-title">🌏 旅遊目的地</div>
-  <!-- 目的地搜尋框 -->
-  <div class="dest-search-wrap" id="destSearchWrap">
-    <input type="text" class="dest-search-input" id="destSearchInput"
-      placeholder="🔍 輸入目的地城市（例：釜山、上海、Bangkok）"
-      oninput="onDestInput(this.value)"
-      onblur="setTimeout(()=>hideDestDropdown(),200)"
-      autocomplete="off">
-    <span class="dest-search-icon" id="destSearchIcon">🌏</span>
-    <span class="dest-search-spinner" id="destSpinner">⏳</span>
-    <div class="dest-dropdown" id="destDropdown"></div>
-  </div>
-  <!-- 已選城市 badge -->
-  <div class="dest-selected-badge" id="destBadge">
-    <span id="destBadgeText"></span>
-    <button class="dest-clear-btn" onclick="clearDest()" title="重新搜尋">✕</button>
+  <div class="dest-grid">
+    <button class="dest-btn active" data-dest="釜山" data-airport="金海國際機場" data-areas="海雲台,南浦洞,西面,廣安里,機張" onclick="selectDest(this)"><span class="df">🇰🇷</span>釜山</button>
+    <button class="dest-btn" data-dest="首爾" data-airport="仁川國際機場" data-areas="明洞,弘大,江南,梨泰院,北村" onclick="selectDest(this)"><span class="df">🇰🇷</span>首爾</button>
+    <button class="dest-btn" data-dest="東京" data-airport="成田國際機場" data-areas="新宿,澀谷,淺草,銀座,原宿" onclick="selectDest(this)"><span class="df">🇯🇵</span>東京</button>
+    <button class="dest-btn" data-dest="大阪" data-airport="關西國際機場" data-areas="道頓堀,心齋橋,難波,梅田,新世界" onclick="selectDest(this)"><span class="df">🇯🇵</span>大阪</button>
+    <button class="dest-btn" data-dest="京都" data-airport="關西國際機場" data-areas="祇園,嵐山,清水寺,伏見稻荷,金閣寺" onclick="selectDest(this)"><span class="df">🇯🇵</span>京都</button>
+    <button class="dest-btn" data-dest="沖繩" data-airport="那霸機場" data-areas="國際通,美浜,古宇利島,美麗海,首里" onclick="selectDest(this)"><span class="df">🇯🇵</span>沖繩</button>
+    <button class="dest-btn" data-dest="曼谷" data-airport="素萬那普機場" data-areas="暹羅,考山路,湄南河,芭提雅,恰圖恰" onclick="selectDest(this)"><span class="df">🇹🇭</span>曼谷</button>
+    <button class="dest-btn" data-dest="新加坡" data-airport="樟宜機場" data-areas="濱海灣,牛車水,小印度,烏節路,聖淘沙" onclick="selectDest(this)"><span class="df">🇸🇬</span>新加坡</button>
+    <button class="dest-btn" data-dest="custom" data-airport="" data-areas="" onclick="selectDest(this)"><span class="df">✏️</span>自訂</button>
   </div>
   <div class="custom-dest" id="customDest">
     <div class="form-grid">
@@ -258,17 +242,17 @@ input:focus,select:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,14
     </div>
   </div>
 
+  <!-- FLIGHTS -->
+  <div class="section-div">✈️ 航班資訊（支援多航段）</div>
+  <div class="entry-list" id="flightList"></div>
+  <button type="button" class="add-entry-btn" onclick="addFlight()">＋ 新增航段</button>
+
   <!-- DATES -->
   <div class="section-div">📅 旅遊日期（自動同步至航班）</div>
   <div class="form-grid">
     <div class="form-group"><label>🛫 出發日期</label><input type="date" id="startDate" onchange="onStartDate(this.value)"></div>
     <div class="form-group"><label>🛬 回程日期</label><input type="date" id="endDate" onchange="onEndDate(this.value)"></div>
   </div>
-
-  <!-- FLIGHTS -->
-  <div class="section-div">✈️ 航班資訊（支援多航段）</div>
-  <div class="entry-list" id="flightList"></div>
-  <button type="button" class="add-entry-btn" onclick="addFlight()">＋ 新增航段</button>
 
   <!-- HOTELS -->
   <div class="section-div">🏨 住宿飯店</div>
@@ -407,106 +391,17 @@ function onEndDate(val){
 // ══════════════════════════════════════
 // DEST
 // ══════════════════════════════════════
-// ══════════════════════════════════════
-// DESTINATION AUTOCOMPLETE
-// ══════════════════════════════════════
-let destSearchTimer = null;
-let destSelected = null; // { city, country, airport, iata, emoji }
-
-function onDestInput(val) {
-  const icon = $('destSearchIcon'), spinner = $('destSpinner');
-  if (!val || val.length < 1) { hideDestDropdown(); return; }
-  icon.style.display = 'none'; spinner.style.display = 'block';
-  clearTimeout(destSearchTimer);
-  // Debounce 500ms
-  destSearchTimer = setTimeout(() => searchDest(val), 500);
-}
-
-async function searchDest(query) {
-  const spinner = $('destSpinner'), icon = $('destSearchIcon');
-  try {
-    const resp = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'destination', prompt: query })
-    });
-    const data = await resp.json();
-    const results = data.results || [];
-    showDestDropdown(results, query);
-  } catch(e) {
-    // Fallback: show manual input option
-    showDestDropdown([], query);
-  } finally {
-    spinner.style.display = 'none'; icon.style.display = 'block';
-  }
-}
-
-function showDestDropdown(results, query) {
-  const dd = $('destDropdown');
-  dd.innerHTML = '';
-  // Show API results
-  results.forEach(r => {
-    const div = document.createElement('div');
-    div.className = 'dest-option';
-    div.innerHTML = `<span class="opt-flag">${r.emoji||'🌏'}</span>
-      <div><div class="opt-city">${r.city}・${r.country}</div>
-      <div class="opt-sub">✈️ ${r.airport}（${r.iata||''}）</div></div>`;
-    div.onclick = () => selectDestResult(r);
-    dd.appendChild(div);
-  });
-  // Always show manual input option
-  const manual = document.createElement('div');
-  manual.className = 'dest-option';
-  manual.style.borderTop = results.length ? '1px dashed #FFE0C0' : '';
-  manual.innerHTML = `<span class="opt-flag">✏️</span>
-    <div><div class="opt-city">手動輸入「${query}」</div>
-    <div class="opt-sub">自行填寫機場等資訊</div></div>`;
-  manual.onclick = () => selectDestManual(query);
-  dd.appendChild(manual);
-  dd.classList.add('show');
-}
-
-function selectDestResult(r) {
-  destSelected = r;
-  currentDest = r.city;
-  currentAreas = DEST_DATA[r.city]?.areas || [r.city];
-  $('destSearchInput').value = '';
-  $('destBadgeText').textContent = `${r.emoji||'🌏'} ${r.city}・${r.country}・${r.airport}`;
-  $('destBadge').classList.add('show');
-  $('customDest').classList.remove('show');
-  hideDestDropdown();
-  updateHotelChips();
+function selectDest(btn){
+  document.querySelectorAll('.dest-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const isC=btn.dataset.dest==='custom';
+  $('customDest').classList.toggle('show',isC);
+  currentDest=btn.dataset.dest;
+  currentAreas=isC?[]:(DEST_DATA[currentDest]?.areas||[]);
+  document.querySelectorAll('[data-hchips]').forEach(el=>fillChips(el,el.dataset.hchips));
   rebuildDayRows();
   saveState();
 }
-
-function selectDestManual(query) {
-  currentDest = 'custom';
-  currentAreas = [];
-  $('destSearchInput').value = query;
-  $('customDest').classList.add('show');
-  if($('customCity')) $('customCity').value = query;
-  $('destBadge').classList.remove('show');
-  hideDestDropdown();
-  updateHotelChips();
-  rebuildDayRows();
-  saveState();
-}
-
-function clearDest() {
-  destSelected = null; currentDest = ''; currentAreas = [];
-  $('destSearchInput').value = '';
-  $('destBadge').classList.remove('show');
-  $('customDest').classList.remove('show');
-  hideDestDropdown();
-}
-
-function hideDestDropdown() { $('destDropdown')?.classList.remove('show'); }
-
-function updateHotelChips() {
-  document.querySelectorAll('[data-hchips]').forEach(el => fillChips(el, el.dataset.hchips));
-}
-function selectDest(btn) {} // legacy alias
 
 // ══════════════════════════════════════
 // 3. FLIGHT AUTOFILL
@@ -546,88 +441,35 @@ function addFlight(from='台灣',to='',date='',dep='',arr='',airline='',num=''){
   $('flightList').appendChild(entry);
 }
 
-// Flight lookup cache (localStorage)
-const FLIGHT_CACHE_PREFIX = 'snoopy_flight_';
-const FLIGHT_DEBOUNCE = {};
-
-function autofillFlight(id) {
-  // Debounce: ignore if already in-flight for this id
-  if (FLIGHT_DEBOUNCE[id]) return;
-  FLIGHT_DEBOUNCE[id] = true;
-  const btn = document.querySelector(`#fe_${id} .flight-autofill-btn`);
-  if (btn) { btn.disabled = true; btn.textContent = '查詢中…'; }
-  _doAutofill(id).finally(() => {
-    FLIGHT_DEBOUNCE[id] = false;
-    if (btn) { btn.disabled = false; btn.textContent = '查詢'; }
-  });
-}
-
-async function _doAutofill(id) {
-  const num = ($(`fnum_${id}`)?.value || '').trim().toUpperCase();
-  if (!num) { setFlightStatus(id, 'err', '請先輸入航班號碼'); return; }
-  const dateVal = $(`fd_${id}`)?.value || '';
-
-  // 1. Check localStorage cache
-  const cacheKey = FLIGHT_CACHE_PREFIX + num + '_' + (dateVal || 'any');
-  try {
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      const info = JSON.parse(cached);
-      applyFlightInfo(id, info);
-      setFlightStatus(id, 'ok', `✅ ${info.from||''}→${info.to||''} ${info.dep||''} (快取)`);
-      return;
-    }
-  } catch(e) {}
-
-  setFlightStatus(id, 'loading', `🔍 查詢 ${num}…`);
-
-  try {
-    const resp = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'flight', flightNumber: num, date: dateVal })
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error || `HTTP ${resp.status}`);
-    }
-
-    const info = await resp.json();
-
-    // Apply all fields (force overwrite)
-    applyFlightInfo(id, info);
-
-    // Save to cache
-    try { localStorage.setItem(cacheKey, JSON.stringify(info)); } catch(e) {}
-
-    const src = info.source === 'aerodatabox' ? '即時資料' : 'AI估算';
-    setFlightStatus(id, 'ok', `✅ ${info.from||''}→${info.to||''} ${info.dep||''} (${src})`);
-
-  } catch(e) {
-    // Manual fallback: just recognise airline prefix
-    const prefix = num.match(/^[A-Z]{2}/)?.[0] || '';
-    const airlines = {'CI':'中華航空','BR':'長榮航空','IT':'台灣虎航','JX':'星宇航空',
-      'OZ':'韓亞航空','KE':'大韓航空','JL':'日本航空','NH':'全日空',
-      'CZ':'中國南方航空','TG':'泰國航空','SQ':'新加坡航空',
-      'MH':'馬來西亞航空','CX':'國泰航空','AE':'華信航空'};
-    if (airlines[prefix]) {
-      $(`fal_${id}`).value = airlines[prefix];
-      setFlightStatus(id, 'warn', `⚠️ 辨識到 ${airlines[prefix]}，請手動填寫時間與日期`);
+async function autofillFlight(id){
+  const num=($(`fnum_${id}`)?.value||'').trim().toUpperCase();
+  if(!num){setFlightStatus(id,'err','請先輸入航班號碼');return;}
+  setFlightStatus(id,'loading',`🔍 Gemini 查詢 ${num}…`);
+  try{
+    const prompt=`查詢航班 ${num} 的資訊。請回傳JSON格式：{"dep":"HH:MM","arr":"HH:MM","airline":"航空公司中文名稱","from":"出發地城市","to":"目的地城市","note":"備註"}。只輸出JSON，不要其他文字。`;
+    const text = await callGemini(prompt, 'flight');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const info = JSON.parse(clean);
+    if(info.dep) $(`fdep_${id}`).value=info.dep;
+    if(info.arr) $(`farr_${id}`).value=info.arr;
+    if(info.airline&&!$(`fal_${id}`).value) $(`fal_${id}`).value=info.airline;
+    if(info.from&&!$(`ff_${id}`).value) $(`ff_${id}`).value=info.from;
+    if(info.to&&!$(`ft_${id}`).value) $(`ft_${id}`).value=info.to;
+    setFlightStatus(id,'ok',`✅ ${info.from||''}→${info.to||''}${info.note?' ('+info.note+')':''}`);
+  }catch(e){
+    // Fallback: airline prefix recognition
+    const prefix=num.match(/^[A-Z]{2}/)?.[0]||'';
+    const airlines={'CI':'中華航空','BR':'長榮航空','IT':'台灣虎航','OZ':'韓亞航空',
+      'KE':'大韓航空','JL':'日本航空','NH':'全日空','CZ':'中國南方航空',
+      'TG':'泰國航空','SQ':'新加坡航空','MH':'馬來西亞航空','CX':'國泰航空',
+      'JX':'星宇航空','AE':'華信航空'};
+    if(airlines[prefix]&&!$(`fal_${id}`).value){
+      $(`fal_${id}`).value=airlines[prefix];
+      setFlightStatus(id,'ok',`✅ 辨識航空：${airlines[prefix]}（請手動填時間）`);
     } else {
-      setFlightStatus(id, 'err', '⚠️ 查詢失敗，請切換手動輸入');
+      setFlightStatus(id,'err','⚠️ 查詢失敗，請手動填寫');
     }
   }
-}
-
-function applyFlightInfo(id, info) {
-  // Force overwrite ALL fields
-  if (info.dep)     $(`fdep_${id}`).value    = info.dep;
-  if (info.arr)     $(`farr_${id}`).value    = info.arr;
-  if (info.date)    $(`fd_${id}`).value      = info.date;
-  if (info.airline) $(`fal_${id}`).value     = info.airline;
-  if (info.from)    $(`ff_${id}`).value      = info.from;
-  if (info.to)      $(`ft_${id}`).value      = info.to;
 }
 function setFlightStatus(id,cls,msg){
   const el=$(`fst_${id}`); if(!el)return;
@@ -1057,15 +899,10 @@ function closeMap(){$('mapModal').classList.remove('show');$('mapFrame').src='';
 // ══════════════════════════════════════
 // DEST INFO
 // ══════════════════════════════════════
-function getDestName(){
-  if(destSelected) return destSelected.city;
-  if(currentDest==='custom') return $('customCity')?.value||'目的地';
-  return currentDest||'目的地';
-}
+function getDestName(){return currentDest==='custom'?($('customCity')?.value||'目的地'):currentDest;}
 function getDestInfo(){
-  if(destSelected) return{dest:destSelected.city, airport:destSelected.airport||'當地機場', emoji:destSelected.emoji||'✈️', lat:DEST_DATA[destSelected.city]?.lat, lon:DEST_DATA[destSelected.city]?.lon};
-  if(currentDest==='custom') return{dest:$('customCity').value.trim()||'目的地',airport:$('customAirport').value.trim()||'當地機場',emoji:'✈️'};
-  return{dest:currentDest,...(DEST_DATA[currentDest]||{airport:'當地機場',emoji:'✈️'})};
+  if(currentDest==='custom')return{dest:$('customCity').value.trim()||'目的地',airport:$('customAirport').value.trim()||'當地機場',emoji:'✈️'};
+  return{dest:currentDest,...DEST_DATA[currentDest]};
 }
 
 // ══════════════════════════════════════
@@ -1227,7 +1064,6 @@ function copyHtml(){
 function saveState(){
   try{
     localStorage.setItem('snoopy_dest', currentDest);
-    if(destSelected) localStorage.setItem('snoopy_dest_obj', JSON.stringify(destSelected));
     localStorage.setItem('snoopy_start', $('startDate').value||'');
     localStorage.setItem('snoopy_end', $('endDate').value||'');
   }catch(e){}
@@ -1244,14 +1080,6 @@ function loadState(){
     if(start){$('startDate').value=start;}
     if(end){$('endDate').value=end;}
     if(start||end){updateBadge();}
-    // Restore saved destination badge
-    const savedDestStr = localStorage.getItem('snoopy_dest_obj');
-    if (savedDestStr) {
-      try {
-        const r = JSON.parse(savedDestStr);
-        selectDestResult(r);
-      } catch(e) {}
-    }
   }catch(e){}
 }
 
@@ -1259,8 +1087,8 @@ function loadState(){
 // INIT
 // ══════════════════════════════════════
 loadState();
-addFlight('台灣', '');
-addFlight('', '台灣');
+addFlight('台灣', DEST_DATA['釜山'].areas[0]||'');
+addFlight(DEST_DATA['釜山'].areas[0]||'', '台灣');
 addHotel();
 if($('startDate').value && $('endDate').value) rebuildDayRows();
 </script>
