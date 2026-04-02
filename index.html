@@ -431,49 +431,88 @@ function onEndDate(val){
 // ══════════════════════════════════════
 const CITY_DB = [
   // 🇹🇼 台灣
-  {city:'台北',country:'台灣',airport:'台灣桃園國際機場',iata:'TPE',emoji:'🇹🇼',areas:['信義','大安','中山','西門','士林','內湖','松山','中正']},
-  {city:'台中',country:'台灣',airport:'台中清泉崗機場',iata:'RMQ',emoji:'🇹🇼',areas:['西區','北區','逢甲','烏日','清水','大坑','霧峰']},
-  {city:'高雄',country:'台灣',airport:'高雄國際機場',iata:'KHH',emoji:'🇹🇼',areas:['鹽埕','左營','苓雅','前鎮','鳳山','三民','楠梓']},
-  {city:'台南',country:'台灣',airport:'台南機場',iata:'TNN',emoji:'🇹🇼',areas:['中西區','東區','安平','仁德','永康','新化','關廟']},
+  {city:'台北',country:'台灣',airport:'台灣桃園國際機場',iata:'TPE',emoji:'🇹🇼',lat:25.0330,lon:121.5654,areas:['信義','大安','中山','西門','士林','內湖','松山','中正']},
+  {city:'台中',country:'台灣',airport:'台中清泉崗機場',iata:'RMQ',emoji:'🇹🇼',lat:24.1477,lon:120.6736,areas:['西區','北區','逢甲','烏日','清水','大坑','霧峰']},
+  {city:'高雄',country:'台灣',airport:'高雄國際機場',iata:'KHH',emoji:'🇹🇼',lat:22.6273,lon:120.3014,areas:['鹽埕','左營','苓雅','前鎮','鳳山','三民','楠梓']},
+  {city:'台南',country:'台灣',airport:'台南機場',iata:'TNN',emoji:'🇹🇼',lat:22.9999,lon:120.2269,areas:['中西區','東區','安平','仁德','永康','新化','關廟']},
   // 🇯🇵 日本
-  {city:'東京',country:'日本',airport:'成田國際機場',iata:'NRT',emoji:'🇯🇵',areas:['新宿','澀谷','淺草','銀座','原宿','秋葉原','上野','池袋']},
-  {city:'大阪',country:'日本',airport:'關西國際機場',iata:'KIX',emoji:'🇯🇵',areas:['道頓堀','心齋橋','難波','梅田','新世界','天王寺','天滿']},
-  {city:'京都',country:'日本',airport:'關西國際機場',iata:'KIX',emoji:'🇯🇵',areas:['祇園','嵐山','清水寺','伏見','金閣寺','河原町','錦市場']},
-  {city:'沖繩',country:'日本',airport:'那霸機場',iata:'OKA',emoji:'🇯🇵',areas:['國際通','美浜','古宇利島','美麗海','首里','本部','恩納']},
-  {city:'札幌',country:'日本',airport:'新千歲機場',iata:'CTS',emoji:'🇯🇵',areas:['大通','薄野','圓山','北広島','小樽','時計台','狸小路']},
-  {city:'福岡',country:'日本',airport:'福岡機場',iata:'FUK',emoji:'🇯🇵',areas:['博多','天神','中洲','太宰府','糸島','小倉','大濠']},
-  {city:'名古屋',country:'日本',airport:'中部國際機場',iata:'NGO',emoji:'🇯🇵',areas:['榮','名駅','大須','覚王山','有松','伏見','金山']},
+  {city:'東京',country:'日本',airport:'成田國際機場',iata:'NRT',emoji:'🇯🇵',lat:35.6762,lon:139.6503,areas:['新宿','澀谷','淺草','銀座','原宿','秋葉原','上野','池袋']},
+  {city:'大阪',country:'日本',airport:'關西國際機場',iata:'KIX',emoji:'🇯🇵',lat:34.6937,lon:135.5023,areas:['道頓堀','心齋橋','難波','梅田','新世界','天王寺','天滿']},
+  {city:'京都',country:'日本',airport:'關西國際機場',iata:'KIX',emoji:'🇯🇵',lat:35.0116,lon:135.7681,areas:['祇園','嵐山','清水寺','伏見','金閣寺','河原町','錦市場']},
+  {city:'沖繩',country:'日本',airport:'那霸機場',iata:'OKA',emoji:'🇯🇵',lat:26.2124,lon:127.6809,areas:['國際通','美浜','古宇利島','美麗海','首里','本部','恩納']},
+  {city:'札幌',country:'日本',airport:'新千歲機場',iata:'CTS',emoji:'🇯🇵',lat:43.0618,lon:141.3545,areas:['大通','薄野','圓山','北広島','小樽','時計台','狸小路']},
+  {city:'福岡',country:'日本',airport:'福岡機場',iata:'FUK',emoji:'🇯🇵',lat:33.5904,lon:130.4017,areas:['博多','天神','中洲','太宰府','糸島','小倉','大濠']},
+  {city:'名古屋',country:'日本',airport:'中部國際機場',iata:'NGO',emoji:'🇯🇵',lat:35.1815,lon:136.9066,areas:['榮','名駅','大須','覚王山','有松','伏見','金山']},
+  {city:'仙台',country:'日本',airport:'仙台機場',iata:'SDJ',emoji:'🇯🇵',lat:38.2682,lon:140.8694,areas:['青葉區','宮城野','若林','泉區','秋保溫泉']},
+  {city:'廣島',country:'日本',airport:'廣島機場',iata:'HIJ',emoji:'🇯🇵',lat:34.3853,lon:132.4553,areas:['中區','平和公園','宮島','吳市','尾道']},
+  {city:'奈良',country:'日本',airport:'關西國際機場',iata:'KIX',emoji:'🇯🇵',lat:34.6851,lon:135.8048,areas:['奈良公園','東大寺','春日大社','吉野','飛鳥']},
   // 🇰🇷 韓國
-  {city:'首爾',country:'韓國',airport:'仁川國際機場',iata:'ICN',emoji:'🇰🇷',areas:['明洞','弘大','江南','梨泰院','北村','東大門','新村']},
-  {city:'釜山',country:'韓國',airport:'金海國際機場',iata:'PUS',emoji:'🇰🇷',areas:['海雲台','南浦洞','西面','廣安里','機張','太宗臺','松島']},
-  {city:'濟州島',country:'韓國',airport:'濟州國際機場',iata:'CJU',emoji:'🇰🇷',areas:['濟州市','西歸浦','城山','中文','翰林','牛島','漢拿山']},
+  {city:'首爾',country:'韓國',airport:'仁川國際機場',iata:'ICN',emoji:'🇰🇷',lat:37.5665,lon:126.9780,areas:['明洞','弘大','江南','梨泰院','北村','東大門','新村']},
+  {city:'釜山',country:'韓國',airport:'金海國際機場',iata:'PUS',emoji:'🇰🇷',lat:35.1796,lon:129.0756,areas:['海雲台','南浦洞','西面','廣安里','機張','太宗臺','松島']},
+  {city:'濟州島',country:'韓國',airport:'濟州國際機場',iata:'CJU',emoji:'🇰🇷',lat:33.4996,lon:126.5312,areas:['濟州市','西歸浦','城山','中文','翰林','牛島','漢拿山']},
+  {city:'大邱',country:'韓國',airport:'大邱國際機場',iata:'TAE',emoji:'🇰🇷',lat:35.8714,lon:128.6014,areas:['中區','東城路','前垓洞','八公山','達城']},
   // 🇹🇭 泰國
-  {city:'曼谷',country:'泰國',airport:'素萬那普機場',iata:'BKK',emoji:'🇹🇭',areas:['暹羅','考山路','素坤逸','湄南河','恰圖恰','芭提雅','是隆']},
-  {city:'清邁',country:'泰國',airport:'清邁國際機場',iata:'CNX',emoji:'🇹🇭',areas:['古城區','尼曼路','素帖山','湄林','清道','三王廟','夜市']},
-  {city:'普吉島',country:'泰國',airport:'普吉國際機場',iata:'HKT',emoji:'🇹🇭',areas:['芭東','卡倫','卡塔','奈漢','拉威','攀瓦','奈陽']},
+  {city:'曼谷',country:'泰國',airport:'素萬那普機場',iata:'BKK',emoji:'🇹🇭',lat:13.7563,lon:100.5018,areas:['暹羅','考山路','素坤逸','湄南河','恰圖恰','芭提雅','是隆']},
+  {city:'清邁',country:'泰國',airport:'清邁國際機場',iata:'CNX',emoji:'🇹🇭',lat:18.7883,lon:98.9853,areas:['古城區','尼曼路','素帖山','湄林','清道','三王廟','夜市']},
+  {city:'普吉島',country:'泰國',airport:'普吉國際機場',iata:'HKT',emoji:'🇹🇭',lat:7.8804,lon:98.3923,areas:['芭東','卡倫','卡塔','奈漢','拉威','攀瓦','奈陽']},
+  {city:'芭達雅',country:'泰國',airport:'素萬那普機場',iata:'BKK',emoji:'🇹🇭',lat:12.9236,lon:100.8825,areas:['芭達雅中區','芭達雅北部','芭達雅南部','芝法他那','欣達']},
   // 🇸🇬 新加坡
-  {city:'新加坡',country:'新加坡',airport:'樟宜機場',iata:'SIN',emoji:'🇸🇬',areas:['濱海灣','牛車水','小印度','烏節路','聖淘沙','克拉碼頭','武吉知馬']},
+  {city:'新加坡',country:'新加坡',airport:'樟宜機場',iata:'SIN',emoji:'🇸🇬',lat:1.3521,lon:103.8198,areas:['濱海灣','牛車水','小印度','烏節路','聖淘沙','克拉碼頭','武吉知馬']},
   // 🇻🇳 越南
-  {city:'胡志明市',country:'越南',airport:'新山一國際機場',iata:'SGN',emoji:'🇻🇳',areas:['第一郡','第三郡','濱城市場','富美興','第七郡','濱城','新平']},
-  {city:'河內',country:'越南',airport:'內排國際機場',iata:'HAN',emoji:'🇻🇳',areas:['還劍湖','西湖','老城區','巴亭','金馬郡','河東','天倫']},
-  {city:'峴港',country:'越南',airport:'峴港國際機場',iata:'DAD',emoji:'🇻🇳',areas:['美溪海灘','古城會安','山茶半島','峴港市區','巴拿山','關南','林同']},
+  {city:'胡志明市',country:'越南',airport:'新山一國際機場',iata:'SGN',emoji:'🇻🇳',lat:10.8231,lon:106.6297,areas:['第一郡','第三郡','濱城市場','富美興','第七郡','濱城','新平']},
+  {city:'河內',country:'越南',airport:'內排國際機場',iata:'HAN',emoji:'🇻🇳',lat:21.0278,lon:105.8342,areas:['還劍湖','西湖','老城區','巴亭','金馬郡','河東','天倫']},
+  {city:'峴港',country:'越南',airport:'峴港國際機場',iata:'DAD',emoji:'🇻🇳',lat:16.0544,lon:108.2022,areas:['美溪海灘','古城會安','山茶半島','峴港市區','巴拿山','關南','林同']},
+  {city:'會安',country:'越南',airport:'峴港國際機場',iata:'DAD',emoji:'🇻🇳',lat:15.8801,lon:108.3380,areas:['古城區','海灘','安邦','茶橋','來遠橋']},
+  {city:'峴港',country:'越南',airport:'峴港國際機場',iata:'DAD',emoji:'🇻🇳',lat:16.0544,lon:108.2022,areas:['美溪海灘','古城會安','山茶半島','峴港市區','巴拿山']},
   // 🇲🇾 馬來西亞
-  {city:'吉隆坡',country:'馬來西亞',airport:'吉隆坡國際機場',iata:'KUL',emoji:'🇲🇾',areas:['武吉免登','KLCC','茨廠街','孟沙','蒲種','安邦','梳邦']},
+  {city:'吉隆坡',country:'馬來西亞',airport:'吉隆坡國際機場',iata:'KUL',emoji:'🇲🇾',lat:3.1390,lon:101.6869,areas:['武吉免登','KLCC','茨廠街','孟沙','蒲種','安邦','梳邦']},
+  {city:'檳城',country:'馬來西亞',airport:'檳城國際機場',iata:'PEN',emoji:'🇲🇾',lat:5.4141,lon:100.3288,areas:['喬治市','姓周橋','升旗山','峇都丁宜','亞依淡']},
+  {city:'亞庇',country:'馬來西亞',airport:'哥打基納巴盧機場',iata:'BKI',emoji:'🇲🇾',lat:5.9788,lon:116.0735,areas:['市中心','加雅街','神山公園','環太平洋','水上屋']},
+  // 🇮🇩 印尼
+  {city:'峇里島',country:'印尼',airport:'恩古拉萊國際機場',iata:'DPS',emoji:'🇮🇩',lat:-8.3405,lon:115.0920,areas:['庫塔','水明漾','烏布','沙努','金巴蘭','努沙杜瓦']},
+  {city:'雅加達',country:'印尼',airport:'蘇加諾-哈達機場',iata:'CGK',emoji:'🇮🇩',lat:-6.2088,lon:106.8456,areas:['中央雅加達','南雅加達','科塔','甘榜格蘭','Menteng']},
+  // 🇵🇭 菲律賓
+  {city:'馬尼拉',country:'菲律賓',airport:'尼諾伊·阿基諾機場',iata:'MNL',emoji:'🇵🇭',lat:14.5995,lon:120.9842,areas:['馬卡蒂','BGC','惟明達瑙','仁人','聖地牙哥']},
+  {city:'宿霧',country:'菲律賓',airport:'麥克坦-宿霧機場',iata:'CEB',emoji:'🇵🇭',lat:10.3157,lon:123.8854,areas:['市中心','麥克坦島','長灘島','歐斯陸','薄荷島']},
   // 🇦🇺 澳洲
-  {city:'雪梨',country:'澳洲',airport:'雪梨國際機場',iata:'SYD',emoji:'🇦🇺',areas:['市中心','達令港','邦代海灘','岩石區','曼利','帕拉馬塔','牛津街']},
-  {city:'墨爾本',country:'澳洲',airport:'墨爾本國際機場',iata:'MEL',emoji:'🇦🇺',areas:['市中心','聖科達','菲茨洛伊','普拉蘭','南岸','達克蘭','卡爾頓']},
+  {city:'雪梨',country:'澳洲',airport:'雪梨國際機場',iata:'SYD',emoji:'🇦🇺',lat:-33.8688,lon:151.2093,areas:['市中心','達令港','邦代海灘','岩石區','曼利','帕拉馬塔','牛津街']},
+  {city:'墨爾本',country:'澳洲',airport:'墨爾本國際機場',iata:'MEL',emoji:'🇦🇺',lat:-37.8136,lon:144.9631,areas:['市中心','聖科達','菲茨洛伊','普拉蘭','南岸','達克蘭','卡爾頓']},
+  {city:'布里斯本',country:'澳洲',airport:'布里斯本機場',iata:'BNE',emoji:'🇦🇺',lat:-27.4698,lon:153.0251,areas:['市中心','黃金海岸','陽光海岸','弗雷澤島','河邊']},
+  // 🇨🇳 中國
+  {city:'上海',country:'中國',airport:'上海虹橋機場',iata:'SHA',emoji:'🇨🇳',lat:31.2304,lon:121.4737,areas:['外灘','浦東','靜安','徐匯','虹橋','陸家嘴','田子坊']},
+  {city:'北京',country:'中國',airport:'北京首都機場',iata:'PEK',emoji:'🇨🇳',lat:39.9042,lon:116.4074,areas:['天安門','三里屯','王府井','後海','西城','朝陽','海淀']},
+  {city:'成都',country:'中國',airport:'成都天府機場',iata:'TFU',emoji:'🇨🇳',lat:30.5728,lon:104.0668,areas:['錦里','寬窄巷子','春熙路','天府廣場','都江堰','九寨溝']},
+  {city:'廈門',country:'中國',airport:'廈門高崎機場',iata:'XMN',emoji:'🇨🇳',lat:24.4798,lon:118.0894,areas:['鼓浪嶼','思明','集美','海滄','同安','翔安']},
+  {city:'桂林',country:'中國',airport:'桂林兩江機場',iata:'KWL',emoji:'🇨🇳',lat:25.2736,lon:110.2908,areas:['象鼻山','漓江','陽朔','龍脊梯田','七星公園']},
+  {city:'三亞',country:'中國',airport:'三亞鳳凰機場',iata:'SYX',emoji:'🇨🇳',lat:18.2524,lon:109.5122,areas:['亞龍灣','大東海','三亞灣','海棠灣','鹿回頭']},
+  // 🇭🇰 香港
+  {city:'香港',country:'香港',airport:'香港國際機場',iata:'HKG',emoji:'🇭🇰',lat:22.3193,lon:114.1694,areas:['中環','旺角','尖沙咀','銅鑼灣','灣仔','九龍城','元朗']},
+  // 🇲🇴 澳門
+  {city:'澳門',country:'澳門',airport:'澳門國際機場',iata:'MFM',emoji:'🇲🇴',lat:22.1987,lon:113.5439,areas:['澳門半島','路氹城','氹仔','大三巴','威尼斯人','官也街']},
+  // 🇬🇧 英國
+  {city:'倫敦',country:'英國',airport:'希斯羅機場',iata:'LHR',emoji:'🇬🇧',lat:51.5074,lon:-0.1278,areas:['西敏寺','肯辛頓','蘇活','柯芬園','南岸','格林威治']},
+  // 🇫🇷 法國
+  {city:'巴黎',country:'法國',airport:'夏爾·戴高樂機場',iata:'CDG',emoji:'🇫🇷',lat:48.8566,lon:2.3522,areas:['艾菲爾鐵塔','羅浮宮','蒙馬特','瑪黑區','香榭麗舍','拉丁區']},
+  // 🇺🇸 美國
+  {city:'洛杉磯',country:'美國',airport:'洛杉磯國際機場',iata:'LAX',emoji:'🇺🇸',lat:34.0522,lon:-118.2437,areas:['好萊塢','聖塔莫尼卡','比佛利山','威尼斯海灘','迪士尼']},
+  {city:'紐約',country:'美國',airport:'甘迺迪機場',iata:'JFK',emoji:'🇺🇸',lat:40.7128,lon:-74.0060,areas:['曼哈頓','布魯克林','時代廣場','中央公園','法拉盛']},
 ];
 
 // Group cities by country for popular panel
 const POPULAR_GROUPS = [
   { country:'台灣', emoji:'🇹🇼', cities:['台北','台中','高雄','台南'] },
-  { country:'日本', emoji:'🇯🇵', cities:['東京','大阪','京都','沖繩','札幌','福岡','名古屋'] },
-  { country:'韓國', emoji:'🇰🇷', cities:['首爾','釜山','濟州島'] },
-  { country:'泰國', emoji:'🇹🇭', cities:['曼谷','清邁','普吉島'] },
+  { country:'日本', emoji:'🇯🇵', cities:['東京','大阪','京都','沖繩','札幌','福岡','名古屋','仙台','廣島','奈良'] },
+  { country:'韓國', emoji:'🇰🇷', cities:['首爾','釜山','濟州島','大邱'] },
+  { country:'泰國', emoji:'🇹🇭', cities:['曼谷','清邁','普吉島','芭達雅'] },
   { country:'新加坡', emoji:'🇸🇬', cities:['新加坡'] },
-  { country:'越南', emoji:'🇻🇳', cities:['胡志明市','河內','峴港'] },
-  { country:'馬來西亞', emoji:'🇲🇾', cities:['吉隆坡'] },
-  { country:'澳洲', emoji:'🇦🇺', cities:['雪梨','墨爾本'] },
+  { country:'越南', emoji:'🇻🇳', cities:['胡志明市','河內','峴港','會安'] },
+  { country:'馬來西亞', emoji:'🇲🇾', cities:['吉隆坡','檳城','亞庇'] },
+  { country:'印尼', emoji:'🇮🇩', cities:['峇里島','雅加達'] },
+  { country:'菲律賓', emoji:'🇵🇭', cities:['馬尼拉','宿霧'] },
+  { country:'中國', emoji:'🇨🇳', cities:['上海','北京','成都','廈門','桂林','三亞'] },
+  { country:'香港・澳門', emoji:'🇭🇰', cities:['香港','澳門'] },
+  { country:'澳洲', emoji:'🇦🇺', cities:['雪梨','墨爾本','布里斯本'] },
+  { country:'歐美', emoji:'🌍', cities:['倫敦','巴黎','洛杉磯','紐約'] },
 ];
 
 // ══════════════════════════════════════
@@ -586,6 +625,8 @@ function selectDestCity(r) {
   destSelected = r;
   currentDest = r.city;
   currentAreas = r.areas || [];
+  // Pre-cache lat/lon to skip Geocoding API later
+  if (r.lat && r.lon) geoCache[r.city] = { lat: r.lat, lon: r.lon };
   $('destSearchInput').value = '';
   $('destBadgeText').textContent = `${r.emoji} ${r.city} · ${r.country} · ${r.airport}`;
   $('destBadge').classList.add('show');
@@ -762,7 +803,7 @@ function getFlights(){
 function addHotel(name='',area='',checkin='',checkout=''){
   hotelCnt++;
   const id=hotelCnt;
-  const aval=area||(currentAreas[0]||'');
+  const aval=area||'';
   const ci=checkin||($('startDate').value||'');
   const co=checkout||($('endDate').value||'');
   const entry=document.createElement('div');
@@ -775,7 +816,8 @@ function addHotel(name='',area='',checkin='',checkout=''){
     <div class="hotel-entry-fields">
       <div class="full form-group"><label>🏨 飯店名稱</label><input type="text" id="hn_${id}" value="${name}" placeholder="例：海雲台格蘭德飯店"></div>
       <div class="full form-group"><label>📍 住宿區域（點選或手動輸入）</label>
-        <input type="text" id="ha_${id}" value="${aval}" placeholder="輸入或點選下方區域按鈕">
+        <input type="text" id="ha_${id}" value="${aval}" id="ha_${id}"
+          placeholder="${currentAreas.length>0?'例：'+currentAreas.slice(0,2).join('、'):'輸入住宿區域'}">
         <div class="hotel-area-chips" id="hc_${id}" data-hchips="${id}"></div>
       </div>
       <div class="form-group"><label>📅 入住</label><input type="date" id="hi_${id}" value="${ci}"></div>
@@ -962,17 +1004,64 @@ function clothingTip(temp){
   return'🧤 大衣＋手套＋保暖必備';
 }
 
+// Geocoding cache
+const geoCache = {};
+
+// 中文城市名 → 英文對照（提升 Geocoding 準確率）
+const CITY_EN = {
+  '台北':'Taipei','台中':'Taichung','高雄':'Kaohsiung','台南':'Tainan',
+  '東京':'Tokyo','大阪':'Osaka','京都':'Kyoto','沖繩':'Okinawa',
+  '札幌':'Sapporo','福岡':'Fukuoka','名古屋':'Nagoya',
+  '首爾':'Seoul','釜山':'Busan','濟州島':'Jeju',
+  '曼谷':'Bangkok','清邁':'Chiang Mai','普吉島':'Phuket',
+  '新加坡':'Singapore',
+  '胡志明市':'Ho Chi Minh City','河內':'Hanoi','峴港':'Da Nang',
+  '吉隆坡':'Kuala Lumpur','雪梨':'Sydney','墨爾本':'Melbourne',
+  '上海':'Shanghai','北京':'Beijing','成都':'Chengdu','廈門':'Xiamen',
+  '香港':'Hong Kong','澳門':'Macau',
+  '峇里島':'Bali','雅加達':'Jakarta',
+  '倫敦':'London','巴黎':'Paris','紐約':'New York','洛杉磯':'Los Angeles',
+};
+
+async function getLatLon(cityName) {
+  if (geoCache[cityName]) return geoCache[cityName];
+
+  // Try English name first (more reliable), then Chinese
+  const queries = [CITY_EN[cityName], cityName].filter(Boolean);
+
+  for (const q of queries) {
+    try {
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=en&format=json`;
+      const r = await fetch(url);
+      const d = await r.json();
+      if (d.results && d.results.length > 0) {
+        const { latitude: lat, longitude: lon } = d.results[0];
+        geoCache[cityName] = { lat, lon };
+        return { lat, lon };
+      }
+    } catch(e) {}
+  }
+  return null;
+}
+
 async function fetchWeather(dest, dateStr, dayBlockId){
   const cacheKey=`${dest}_${dateStr}`;
   if(weatherCache[cacheKey]){renderWeather(dayBlockId, weatherCache[cacheKey]);return;}
-  const info=DEST_DATA[dest];
-  if(!info)return;
+
   const today=new Date(); const tripDate=new Date(dateStr);
   const diffDays=Math.round((tripDate-today)/86400000);
-  if(diffDays<=7&&diffDays>=0){
-    // Use open-meteo (no API key needed!)
+
+  // Step 1: Try CITY_DB lat/lon first (fast, offline)
+  // then fallback to Geocoding API for unknown cities
+  const cityData = CITY_DB.find(c => c.city === dest);
+  const coords = cityData
+    ? { lat: cityData.lat, lon: cityData.lon }
+    : await getLatLon(dest);
+
+  if(coords && diffDays<=7 && diffDays>=0){
+    // Real forecast (within 7 days)
     try{
-      const url=`https://api.open-meteo.com/v1/forecast?latitude=${info.lat}&longitude=${info.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`;
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`;
       const r=await fetch(url);
       const d=await r.json();
       if(d.daily){
@@ -988,12 +1077,34 @@ async function fetchWeather(dest, dateStr, dayBlockId){
       }
     }catch(e){}
   }
-  // Fallback: monthly average
+
+  if(coords && diffDays>7){
+    // Historical climate (beyond 7 days) - use open-meteo climate API
+    try{
+      const month=new Date(dateStr).getMonth()+1;
+      const startDate=`${new Date(dateStr).getFullYear()}-${String(month).padStart(2,'0')}-01`;
+      const endDate=dateStr;
+      const url=`https://climate-api.open-meteo.com/v1/climate?latitude=${coords.lat}&longitude=${coords.lon}&start_date=1990-01-01&end_date=2020-12-31&models=EC_Earth3P_HR&daily=temperature_2m_max,temperature_2m_min`;
+      // Fallback to MONTHLY_AVG if climate API too slow
+      throw new Error('use monthly avg');
+    }catch(e){}
+  }
+
+  // Final fallback: built-in monthly averages
   const month=new Date(dateStr).getMonth();
   const avgs=MONTHLY_AVG[dest];
   if(avgs){
     const avg=avgs[month];
-    const w={icon:'📅',tmax:avg+4,tmin:avg-4,rain:null,type:'historical',avg};
+    const w={icon:'📅',tmax:avg+4,tmin:avg-4,rain:null,type:'historical'};
+    weatherCache[cacheKey]=w;
+    renderWeather(dayBlockId,w);
+    return;
+  }
+  // Generic estimate based on latitude (works for any city with coords)
+  if(coords){
+    const lat=Math.abs(coords.lat);
+    const base=lat<10?28:lat<23?26:lat<35?20:lat<50?14:8;
+    const w={icon:'🌤️',tmax:base+4,tmin:base-4,rain:null,type:'historical'};
     weatherCache[cacheKey]=w;
     renderWeather(dayBlockId,w);
   }
@@ -1094,10 +1205,10 @@ function rebuildDayRows(){
 }
 
 async function loadWeatherForDay(i, ds){
-  const dest=currentDest==='custom'?($('customCity')?.value||''):currentDest;
+  const dest = getDestName();
   const wl=$(`wl_${i}`); if(wl)wl.textContent='';
-  if(DEST_DATA[dest]||MONTHLY_AVG[dest]){
-    await fetchWeather(dest,ds,`db_${i}`);
+  if(dest && dest !== '目的地'){
+    await fetchWeather(dest, ds, `db_${i}`);
   }
 }
 
