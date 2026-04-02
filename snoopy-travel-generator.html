@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>史努比旅行社 · 智能行程規劃器</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --or:#FF8C42;--ord:#FF5C1A;--br:#3B2A1A;--tan:#C07040;
+  --cr:#FFF8F0;--crl:#FFFDF8;--bdr:#FFE0C0;--bdrl:#FFD0A0;
+  --gr:#5BAD6F;--rd:#E05040;--bl:#4488CC;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(155deg,#FFF4E8 0%,#FFF0F8 50%,#F0F4FF 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 80px;}
+
+/* HEADER */
+.site-header{text-align:center;margin-bottom:20px;}
+.logo-wrap{font-size:52px;display:block;animation:bob 2.2s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
+.agency-tag{font-size:10px;letter-spacing:4px;color:var(--tan);font-weight:800;text-transform:uppercase;margin-top:2px;}
+
+/* EDITABLE TITLE */
+.trip-title-wrap{position:relative;display:inline-block;margin:6px 0 2px;}
+.trip-title{font-family:'Caveat',cursive;font-size:28px;font-weight:700;color:var(--br);cursor:pointer;border-bottom:2px dashed transparent;padding:2px 8px;border-radius:8px;transition:all .2s;display:block;min-width:200px;text-align:center;}
+.trip-title:hover{border-bottom-color:var(--or);background:rgba(255,140,66,.06);}
+.trip-title-input{font-family:'Caveat',cursive;font-size:28px;font-weight:700;color:var(--br);border:2px solid var(--or);border-radius:10px;padding:2px 10px;background:#FFF8F0;outline:none;display:none;width:100%;text-align:center;}
+.title-edit-hint{font-size:10px;color:#C0A080;font-weight:700;margin-top:2px;}
+
+/* MAIN CARD */
+.card{background:white;border-radius:22px;padding:24px 20px;width:100%;max-width:600px;box-shadow:0 6px 32px rgba(200,120,50,.10);border:2px solid var(--bdr);margin-bottom:16px;}
+.card-title{font-size:11px;font-weight:900;color:var(--tan);letter-spacing:2px;text-transform:uppercase;border-left:4px solid var(--or);padding-left:10px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* DEST GRID */
+.dest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
+.dest-btn{border:2px solid var(--bdrl);border-radius:11px;background:var(--cr);padding:9px 4px;cursor:pointer;text-align:center;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;color:#7A5C3A;transition:all .17s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.dest-btn .df{font-size:20px;}
+.dest-btn:hover{border-color:var(--or);background:#FFF0DC;}
+.dest-btn.active{border-color:var(--ord);background:linear-gradient(135deg,#FFF0DC,#FFE4C4);color:var(--ord);box-shadow:0 2px 8px rgba(255,100,30,.18);}
+.custom-dest{display:none;margin-bottom:12px;}
+.custom-dest.show{display:block;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:11px;font-weight:800;color:#7A5C3A;}
+input,select{padding:9px 11px;border:2px solid var(--bdrl);border-radius:11px;font-family:'Nunito',sans-serif;font-size:13px;color:var(--br);background:var(--cr);outline:none;transition:all .2s;width:100%;}
+input:focus,select:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,140,66,.12);}
+
+.section-div{display:flex;align-items:center;gap:8px;margin:16px 0 12px;color:var(--or);font-size:11px;font-weight:900;letter-spacing:1px;}
+.section-div::before,.section-div::after{content:'';flex:1;height:1px;background:var(--bdr);}
+
+/* FLIGHT ENTRIES */
+.entry-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.flight-entry,.hotel-entry{background:var(--cr);border:2px solid var(--bdr);border-radius:14px;padding:12px 14px;}
+.entry-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.entry-label{font-size:11px;font-weight:900;color:var(--ord);display:flex;align-items:center;gap:5px;}
+.flight-three{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;margin-bottom:8px;}
+.flight-arrow{text-align:center;font-size:16px;padding-bottom:8px;}
+.flight-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+
+/* Flight autofill */
+.flight-num-wrap{position:relative;}
+.flight-autofill-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--or);border:none;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:900;color:white;cursor:pointer;font-family:'Nunito',sans-serif;}
+.flight-autofill-btn:hover{background:var(--ord);}
+.flight-status{font-size:10px;margin-top:3px;font-weight:700;min-height:14px;}
+.flight-status.loading{color:var(--tan);}
+.flight-status.ok{color:var(--gr);}
+.flight-status.err{color:var(--rd);}
+
+/* HOTEL ENTRIES */
+.hotel-entry-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.hotel-entry-fields .full{grid-column:1/-1;}
+.area-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.achip{font-size:10px;font-weight:800;color:var(--tan);background:#FFF0DC;border:1.5px solid var(--bdrl);border-radius:20px;padding:2px 8px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
+.achip:hover{background:#FFE0C0;border-color:var(--or);}
+
+/* HOTEL RECOMMEND */
+.hotel-recommend-btn{width:100%;padding:9px;background:linear-gradient(135deg,#4488CC,#2266AA);color:white;border:none;border-radius:11px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;margin-top:8px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.hotel-recommend-btn:hover{opacity:.9;transform:translateY(-1px);}
+.hotel-recommend-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.hotel-recs{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.hotel-rec-card{background:white;border:2px solid #C8D8F0;border-radius:11px;padding:10px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px;}
+.hotel-rec-card:hover{border-color:#4488CC;background:#F0F6FF;transform:translateX(2px);}
+.hotel-rec-card .rec-star{font-size:12px;color:#F0A020;}
+.hotel-rec-card .rec-name{font-size:13px;font-weight:800;color:var(--br);}
+.hotel-rec-card .rec-area{font-size:11px;color:#608090;font-weight:700;}
+.hotel-rec-card .rec-price{font-size:11px;color:var(--gr);font-weight:800;margin-top:2px;}
+.use-rec-btn{font-size:10px;background:var(--or);color:white;border:none;border-radius:7px;padding:3px 8px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;margin-left:auto;flex-shrink:0;}
+
+/* ADD BUTTONS */
+.add-entry-btn{width:100%;padding:10px;background:none;border:2px dashed #FFB870;border-radius:13px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--tan);cursor:pointer;transition:all .15s;}
+.add-entry-btn:hover{background:#FFF0DC;border-color:var(--or);color:var(--ord);}
+.remove-btn{background:none;border:1.5px solid var(--bdrl);border-radius:7px;width:24px;height:24px;cursor:pointer;color:var(--tan);font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;transition:all .15s;flex-shrink:0;}
+.remove-btn:hover{background:#FFE0C0;border-color:var(--or);}
+
+/* DAYS BADGE */
+.days-badge{background:#FFF0DC;border:2px dashed #FFB870;border-radius:13px;padding:11px 14px;text-align:center;font-size:13px;font-weight:800;color:var(--tan);margin-bottom:14px;min-height:46px;display:flex;align-items:center;justify-content:center;gap:7px;}
+.days-badge .big{font-size:24px;color:var(--ord);}
+.error-msg{color:var(--rd);font-size:12px;font-weight:700;text-align:center;margin-top:6px;display:none;}
+
+/* AI ITINERARY BUTTON */
+.ai-gen-btn{width:100%;padding:14px;background:linear-gradient(135deg,#7B4FD4,#5533AA);color:white;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 16px rgba(100,60,200,.3);transition:all .17s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
+.ai-gen-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(100,60,200,.4);}
+.ai-gen-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.ai-status{font-size:12px;font-weight:700;text-align:center;margin-bottom:8px;min-height:18px;color:var(--tan);}
+
+/* DAY BLOCKS */
+.day-block{background:var(--cr);border:2px solid var(--bdr);border-radius:14px;padding:12px 14px;margin-bottom:8px;transition:border-color .2s;}
+.day-block.manual-mode{border-color:var(--or);}
+.day-block.ai-mode{border-color:#9977DD;}
+.day-block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px;flex-wrap:wrap;}
+.day-block-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.day-title{font-size:13px;font-weight:900;color:var(--ord);}
+.day-date{font-size:11px;color:#A08060;font-weight:700;}
+.mode-badge{font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;}
+.mode-badge.auto{background:#E8F8E8;color:#30A060;border:1.5px solid #A0DCA0;}
+.mode-badge.manual{background:#FFF0DC;color:var(--tan);border:1.5px solid #FFB870;}
+.mode-badge.ai{background:#F0EAFF;color:#7744CC;border:1.5px solid #C0A0FF;}
+
+/* WEATHER in day block */
+.day-weather{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:7px 10px;background:linear-gradient(135deg,#EEF6FF,#E8F8FF);border-radius:10px;border:1.5px solid #B8DAFF;}
+.weather-icon{font-size:22px;}
+.weather-info{font-size:11px;font-weight:800;color:#3366AA;}
+.weather-temp{font-size:14px;font-weight:900;color:#2255AA;}
+.weather-tip{font-size:10px;color:#5588AA;font-weight:700;}
+.weather-loading{font-size:11px;color:#99AACC;font-weight:700;font-style:italic;}
+
+/* TOGGLE */
+.toggle-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.toggle-sw{position:relative;width:40px;height:20px;}
+.toggle-sw input{opacity:0;width:0;height:0;}
+.toggle-sl{position:absolute;cursor:pointer;inset:0;background:#FFD0A0;border-radius:20px;transition:.25s;}
+.toggle-sl::before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.25s;}
+.toggle-sw input:checked+.toggle-sl{background:var(--or);}
+.toggle-sw input:checked+.toggle-sl::before{transform:translateX(20px);}
+
+/* SCHED ROWS */
+.sched-list{display:flex;flex-direction:column;gap:3px;margin-top:6px;}
+.sched-row{display:flex;align-items:center;gap:5px;background:white;border:1.5px solid var(--bdr);border-radius:9px;padding:5px 7px;cursor:default;transition:all .15s;position:relative;}
+.sched-row.dragging{opacity:.35;border-style:dashed;}
+.sched-row.drag-over{border-color:var(--or);background:#FFF0DC;transform:scale(1.01);}
+.sched-row.conflict{border-color:var(--rd);background:#FFF0F0;}
+.drag-handle{cursor:grab;color:#C0A080;font-size:13px;flex-shrink:0;user-select:none;}
+.drag-handle:active{cursor:grabbing;}
+.sched-t input{width:52px;padding:4px 5px;font-size:11px;font-weight:800;color:var(--tan);border:none;background:transparent;text-align:center;}
+.sched-t input:focus{outline:2px solid var(--or);border-radius:5px;background:var(--cr);}
+.sched-x{flex:1;position:relative;}
+.sched-x input{padding:4px 7px;font-size:12px;border:none;background:transparent;width:100%;}
+.sched-x input:focus{outline:2px solid var(--or);border-radius:6px;background:var(--cr);}
+.sched-x input.is-def{color:#A08060;}
+.sched-x input.is-cust{color:var(--br);}
+.conflict-tag{position:absolute;right:2px;top:-9px;font-size:9px;color:var(--rd);font-weight:900;background:white;padding:0 3px;display:none;}
+.sched-row.conflict .conflict-tag{display:block;}
+.map-btn{flex-shrink:0;background:none;border:1.5px solid var(--bdrl);border-radius:7px;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s;}
+.map-btn:hover{background:#E8F0FF;border-color:#4488FF;}
+.del-btn{flex-shrink:0;background:none;border:1.5px solid var(--bdrl);border-radius:7px;width:22px;height:22px;cursor:pointer;color:var(--tan);font-size:11px;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;transition:all .15s;}
+.del-btn:hover{background:#FFE0C0;border-color:var(--or);}
+.add-sched-btn{width:100%;padding:5px;background:none;border:1.5px dashed #FFB870;border-radius:9px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;color:var(--tan);cursor:pointer;margin-top:5px;transition:all .15s;}
+.add-sched-btn:hover{background:#FFF0DC;border-color:var(--or);}
+
+/* GENERATE BTN */
+.gen-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--or),var(--ord));color:white;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(255,100,30,.32);transition:all .16s;margin-top:4px;}
+.gen-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,100,30,.42);}
+.gen-btn:active{transform:translateY(0);}
+
+/* MAP MODAL */
+#mapModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;}
+#mapModal.show{display:flex;}
+.map-box{background:white;border-radius:20px;width:min(93vw,560px);max-height:90vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.28);}
+.map-hd{background:linear-gradient(135deg,var(--or),var(--ord));padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.map-hd span{font-size:14px;font-weight:900;color:white;}
+.map-close{background:rgba(255,255,255,.3);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;color:white;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.map-search{padding:12px 14px;border-bottom:1px solid var(--bdr);}
+.map-search input{width:100%;padding:9px 12px;border:2px solid var(--bdrl);border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;background:var(--cr);outline:none;}
+.map-search input:focus{border-color:var(--or);}
+.map-info{padding:8px 14px;font-size:11px;color:#7A5C3A;font-weight:700;background:var(--cr);border-bottom:1px solid var(--bdr);min-height:32px;}
+#mapFrame{width:100%;height:300px;border:none;}
+.map-ft{padding:10px 14px;display:flex;gap:7px;}
+.map-use{flex:1;padding:9px;background:linear-gradient(135deg,var(--or),var(--ord));color:white;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:900;cursor:pointer;}
+.map-cancel{padding:9px 16px;background:white;border:2px solid var(--bdrl);border-radius:10px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--tan);cursor:pointer;}
+
+/* OUTPUT */
+#outputArea{width:100%;max-width:720px;display:none;}
+#outputArea.show{display:block;}
+.out-actions{display:flex;gap:8px;margin-bottom:14px;}
+.out-btn{flex:1;padding:11px;border:none;border-radius:13px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;cursor:pointer;transition:all .14s;}
+.out-dl{background:linear-gradient(135deg,var(--or),var(--ord));color:white;box-shadow:0 3px 12px rgba(255,100,30,.28);}
+.out-dl:hover{transform:translateY(-1px);}
+.out-cp{background:white;color:var(--tan);border:2px solid var(--bdrl);}
+.out-cp:hover{border-color:var(--or);background:#FFF0DC;}
+.out-cp.copied{background:var(--gr);color:white;border-color:var(--gr);}
+#travelPage{background:white;border-radius:22px;overflow:hidden;box-shadow:0 8px 40px rgba(200,120,50,.14);border:2px solid var(--bdr);}
+</style>
+</head>
+<body>
+
+<!-- MAP MODAL -->
+<div id="mapModal">
+  <div class="map-box">
+    <div class="map-hd"><span>📍 景點地圖查詢</span><button class="map-close" onclick="closeMap()">✕</button></div>
+    <div class="map-search"><input type="text" id="mapQ" placeholder="輸入景點名稱…" oninput="searchMap(this.value)" onkeydown="if(event.key==='Enter')searchMap(this.value)"></div>
+    <div class="map-info" id="mapInfo">在上方輸入景點名稱查詢</div>
+    <iframe id="mapFrame" src="" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <div class="map-ft">
+      <button class="map-cancel" onclick="closeMap()">取消</button>
+      <button class="map-use" onclick="applyMap()">✅ 填入此景點</button>
+    </div>
+  </div>
+</div>
+
+<!-- SITE HEADER -->
+<div class="site-header">
+  <span class="logo-wrap">🐾</span>
+  <div class="agency-tag">Snoopy Travel Agency · 史努比旅行社</div>
+  <div class="trip-title-wrap">
+    <span class="trip-title" id="tripTitle" onclick="startEditTitle()" title="點擊修改標題">我的旅遊行程 ✏️</span>
+    <input type="text" class="trip-title-input" id="tripTitleInput" onblur="saveTitle()" onkeydown="if(event.key==='Enter')saveTitle()">
+  </div>
+  <div class="title-edit-hint">點擊標題可修改 · 自動儲存</div>
+</div>
+
+<!-- MAIN FORM CARD -->
+<div class="card">
+  <div class="card-title">🌏 旅遊目的地</div>
+  <div class="dest-grid">
+    <button class="dest-btn active" data-dest="釜山" data-airport="金海國際機場" data-areas="海雲台,南浦洞,西面,廣安里,機張" onclick="selectDest(this)"><span class="df">🇰🇷</span>釜山</button>
+    <button class="dest-btn" data-dest="首爾" data-airport="仁川國際機場" data-areas="明洞,弘大,江南,梨泰院,北村" onclick="selectDest(this)"><span class="df">🇰🇷</span>首爾</button>
+    <button class="dest-btn" data-dest="東京" data-airport="成田國際機場" data-areas="新宿,澀谷,淺草,銀座,原宿" onclick="selectDest(this)"><span class="df">🇯🇵</span>東京</button>
+    <button class="dest-btn" data-dest="大阪" data-airport="關西國際機場" data-areas="道頓堀,心齋橋,難波,梅田,新世界" onclick="selectDest(this)"><span class="df">🇯🇵</span>大阪</button>
+    <button class="dest-btn" data-dest="京都" data-airport="關西國際機場" data-areas="祇園,嵐山,清水寺,伏見稻荷,金閣寺" onclick="selectDest(this)"><span class="df">🇯🇵</span>京都</button>
+    <button class="dest-btn" data-dest="沖繩" data-airport="那霸機場" data-areas="國際通,美浜,古宇利島,美麗海,首里" onclick="selectDest(this)"><span class="df">🇯🇵</span>沖繩</button>
+    <button class="dest-btn" data-dest="曼谷" data-airport="素萬那普機場" data-areas="暹羅,考山路,湄南河,芭提雅,恰圖恰" onclick="selectDest(this)"><span class="df">🇹🇭</span>曼谷</button>
+    <button class="dest-btn" data-dest="新加坡" data-airport="樟宜機場" data-areas="濱海灣,牛車水,小印度,烏節路,聖淘沙" onclick="selectDest(this)"><span class="df">🇸🇬</span>新加坡</button>
+    <button class="dest-btn" data-dest="custom" data-airport="" data-areas="" onclick="selectDest(this)"><span class="df">✏️</span>自訂</button>
+  </div>
+  <div class="custom-dest" id="customDest">
+    <div class="form-grid">
+      <div class="form-group"><label>🌍 城市名稱</label><input type="text" id="customCity" placeholder="例：上海"></div>
+      <div class="form-group"><label>✈️ 機場名稱</label><input type="text" id="customAirport" placeholder="例：虹橋機場"></div>
+    </div>
+  </div>
+
+  <!-- FLIGHTS -->
+  <div class="section-div">✈️ 航班資訊（支援多航段）</div>
+  <div class="entry-list" id="flightList"></div>
+  <button type="button" class="add-entry-btn" onclick="addFlight()">＋ 新增航段</button>
+
+  <!-- DATES -->
+  <div class="section-div">📅 旅遊日期（自動同步至航班）</div>
+  <div class="form-grid">
+    <div class="form-group"><label>🛫 出發日期</label><input type="date" id="startDate" onchange="onStartDate(this.value)"></div>
+    <div class="form-group"><label>🛬 回程日期</label><input type="date" id="endDate" onchange="onEndDate(this.value)"></div>
+  </div>
+
+  <!-- HOTELS -->
+  <div class="section-div">🏨 住宿飯店</div>
+  <div class="entry-list" id="hotelList"></div>
+  <button type="button" class="add-entry-btn" onclick="addHotel()">＋ 新增飯店</button>
+
+  <!-- DAYS -->
+  <div id="daysBadge" class="days-badge" style="margin-top:16px;">請選擇日期以計算天數 🐾</div>
+  <p class="error-msg" id="errorMsg">⚠️ 回程日期必須晚於出發日期！</p>
+
+  <!-- AI ITINERARY -->
+  <div class="section-div">🤖 AI 智能行程規劃</div>
+  <button class="ai-gen-btn" id="aiBtn" onclick="generateAIItinerary()">✨ 用 AI 自動生成行程</button>
+  <div class="ai-status" id="aiStatus"></div>
+
+  <!-- DAY ROWS -->
+  <div class="section-div">📋 每日行程</div>
+  <div id="dayRows"></div>
+
+  <button class="gen-btn" onclick="generate()">🐾 生成旅遊行程網頁</button>
+</div>
+
+<!-- POWERED BY NOTICE -->
+<div style="width:100%;max-width:600px;background:linear-gradient(135deg,#F0FFF4,#E8F8FF);border:2px solid #A0DCA0;border-radius:18px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+  <span style="font-size:28px;">🐾</span>
+  <div>
+    <div style="font-size:13px;font-weight:900;color:#206040;">史努比旅行社 · AI 智能版</div>
+    <div style="font-size:11px;color:#508060;margin-top:2px;">由 Google Gemini AI 驅動・行程生成・飯店推薦・航班查詢</div>
+  </div>
+  <span style="margin-left:auto;font-size:10px;background:#E8FFF0;color:#30A060;border-radius:20px;padding:3px 10px;font-weight:800;border:1.5px solid #A0DCA0;white-space:nowrap;">完全免費使用</span>
+</div>
+
+<div id="outputArea">
+  <div class="out-actions">
+    <button class="out-btn out-dl" onclick="downloadPage()">⬇️ 下載網頁</button>
+    <button class="out-btn out-cp" id="cpBtn" onclick="copyHtml()">📋 複製 HTML</button>
+  </div>
+  <div id="travelPage"></div>
+</div>
+<script>
+// ══════════════════════════════════════
+// BACKEND API CALLER (Key 安全藏在 Vercel 後端)
+// ══════════════════════════════════════
+const API_BASE = '/api/gemini';
+
+async function callGemini(prompt, type) {
+  const resp = await fetch(API_BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, type })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${resp.status}`);
+  }
+  const data = await resp.json();
+  return data.text || '';
+}
+
+// ══════════════════════════════════════
+// CONSTANTS & STATE
+// ══════════════════════════════════════
+const $=id=>document.getElementById(id);
+const WD=['日','一','二','三','四','五','六'];
+const PASTEL=['#FFE8E8','#FFE8F4','#F0E8FF','#E8EEFF','#E8F8FF','#E8FFF0','#FFFBE8','#FFF0E8'];
+const PBDR=['#FFB8B8','#FFB8D8','#C8B8FF','#B8C8FF','#B8E8FF','#B8FFCC','#FFE8B8','#FFD0B8'];
+const PTC=['#D04040','#C04080','#6040C0','#4060C0','#4090C0','#30A060','#C09030','#C07040'];
+const DEST_DATA={
+  '釜山':{airport:'金海國際機場',areas:['海雲台','南浦洞','西面','廣安里','機張'],emoji:'🌊',lat:35.1796,lon:129.0756},
+  '首爾':{airport:'仁川國際機場',areas:['明洞','弘大','江南','梨泰院','北村'],emoji:'🏙️',lat:37.5665,lon:126.9780},
+  '東京':{airport:'成田國際機場',areas:['新宿','澀谷','淺草','銀座','原宿'],emoji:'🗼',lat:35.6762,lon:139.6503},
+  '大阪':{airport:'關西國際機場',areas:['道頓堀','心齋橋','難波','梅田','新世界'],emoji:'🦞',lat:34.6937,lon:135.5023},
+  '京都':{airport:'關西國際機場',areas:['祇園','嵐山','清水寺','伏見稻荷','金閣寺'],emoji:'⛩️',lat:35.0116,lon:135.7681},
+  '沖繩':{airport:'那霸機場',areas:['國際通','美浜','古宇利島','美麗海','首里'],emoji:'🏖️',lat:26.2124,lon:127.6809},
+  '曼谷':{airport:'素萬那普機場',areas:['暹羅','考山路','湄南河','芭提雅','恰圖恰'],emoji:'🛺',lat:13.7563,lon:100.5018},
+  '新加坡':{airport:'樟宜機場',areas:['濱海灣','牛車水','小印度','烏節路','聖淘沙'],emoji:'🦁',lat:1.3521,lon:103.8198},
+};
+
+// Monthly avg temp fallback (°C) for > 7-day forecasts
+const MONTHLY_AVG={
+  '釜山':[-1,1,6,13,18,22,26,27,22,16,9,2],
+  '首爾':[-5,-3,3,10,17,21,25,26,20,13,5,-2],
+  '東京':[5,6,9,14,19,22,26,28,24,18,12,7],
+  '大阪':[5,6,9,15,20,24,28,29,25,19,13,7],
+  '京都':[4,5,8,14,19,24,28,30,25,19,12,6],
+  '沖繩':[17,17,19,22,25,28,30,29,28,25,22,19],
+  '曼谷':[26,28,29,30,30,29,28,28,28,28,27,26],
+  '新加坡':[27,27,28,28,28,28,28,28,27,27,27,27],
+};
+
+let currentDest='釜山', currentAreas=DEST_DATA['釜山'].areas;
+let flightCnt=0, hotelCnt=0, dragSrc=null;
+let mapTargetInput=null, mapQuery='';
+let aiGeneratedDays={};    // { dayIndex: [{t,txt}] }
+let weatherCache={};       // { 'dest_date': weatherData }
+
+// ══════════════════════════════════════
+// 1. EDITABLE TITLE
+// ══════════════════════════════════════
+function startEditTitle(){
+  const t=$('tripTitle'), i=$('tripTitleInput');
+  i.value=t.textContent.replace(' ✏️','').trim();
+  t.style.display='none'; i.style.display='block'; i.focus(); i.select();
+}
+function saveTitle(){
+  const t=$('tripTitle'), i=$('tripTitleInput');
+  const val=i.value.trim()||'我的旅遊行程';
+  t.textContent=val+' ✏️';
+  t.style.display='block'; i.style.display='none';
+  localStorage.setItem('snoopy_title', val);
+}
+
+// ══════════════════════════════════════
+// 2. SMART DATE SYNC
+// ══════════════════════════════════════
+function onStartDate(val){
+  updateBadge(); rebuildDayRows();
+  // Sync first flight date
+  const entries=[...$('flightList').querySelectorAll('.flight-entry')];
+  if(entries[0]){
+    const id=entries[0].id.replace('fe_','');
+    const d=$(`fd_${id}`); if(d&&!d.value) d.value=val;
+  }
+}
+function onEndDate(val){
+  updateBadge(); rebuildDayRows();
+  // Sync last flight date
+  const entries=[...$('flightList').querySelectorAll('.flight-entry')];
+  if(entries.length>1){
+    const last=entries[entries.length-1];
+    const id=last.id.replace('fe_','');
+    const d=$(`fd_${id}`); if(d&&!d.value) d.value=val;
+  }
+}
+
+// ══════════════════════════════════════
+// DEST
+// ══════════════════════════════════════
+function selectDest(btn){
+  document.querySelectorAll('.dest-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const isC=btn.dataset.dest==='custom';
+  $('customDest').classList.toggle('show',isC);
+  currentDest=btn.dataset.dest;
+  currentAreas=isC?[]:(DEST_DATA[currentDest]?.areas||[]);
+  document.querySelectorAll('[data-hchips]').forEach(el=>fillChips(el,el.dataset.hchips));
+  rebuildDayRows();
+  saveState();
+}
+
+// ══════════════════════════════════════
+// 3. FLIGHT AUTOFILL
+// ══════════════════════════════════════
+function addFlight(from='台灣',to='',date='',dep='',arr='',airline='',num=''){
+  flightCnt++;
+  const id=flightCnt;
+  const isFirst=$('flightList').children.length===0;
+  const lbl=isFirst?'🛫 去程':'🛬 回程';
+  const defDate=isFirst?($('startDate').value||''):($('endDate').value||'');
+  const entry=document.createElement('div');
+  entry.className='flight-entry'; entry.id=`fe_${id}`;
+  entry.innerHTML=`
+    <div class="entry-header">
+      <div class="entry-label">${lbl} · 航段 ${id}</div>
+      <button type="button" class="remove-btn" onclick="$('fe_${id}').remove()">✕</button>
+    </div>
+    <div class="flight-three">
+      <div class="form-group"><label>出發地</label><input type="text" id="ff_${id}" value="${from}" placeholder="例：台北"></div>
+      <div class="flight-arrow">✈️</div>
+      <div class="form-group"><label>目的地</label><input type="text" id="ft_${id}" value="${to}" placeholder="例：釜山"></div>
+    </div>
+    <div class="flight-meta">
+      <div class="form-group"><label>📅 日期</label><input type="date" id="fd_${id}" value="${date||defDate}"></div>
+      <div class="form-group"><label>起飛</label><input type="time" id="fdep_${id}" value="${dep||'08:00'}"></div>
+      <div class="form-group"><label>降落</label><input type="time" id="farr_${id}" value="${arr||'10:30'}"></div>
+    </div>
+    <div class="form-grid" style="margin-top:8px;margin-bottom:0;">
+      <div class="form-group"><label>✈️ 航空公司</label><input type="text" id="fal_${id}" value="${airline}" placeholder="例：中華航空"></div>
+      <div class="form-group flight-num-wrap">
+        <label>航班號</label>
+        <input type="text" id="fnum_${id}" value="${num}" placeholder="例：CI815">
+        <button class="flight-autofill-btn" onclick="autofillFlight(${id})">查詢</button>
+      </div>
+    </div>
+    <div class="flight-status" id="fst_${id}"></div>`;
+  $('flightList').appendChild(entry);
+}
+
+async function autofillFlight(id){
+  const num=($(`fnum_${id}`)?.value||'').trim().toUpperCase();
+  if(!num){setFlightStatus(id,'err','請先輸入航班號碼');return;}
+  setFlightStatus(id,'loading',`🔍 Gemini 查詢 ${num}…`);
+  try{
+    const prompt=`查詢航班 ${num} 的資訊。請回傳JSON格式：{"dep":"HH:MM","arr":"HH:MM","airline":"航空公司中文名稱","from":"出發地城市","to":"目的地城市","note":"備註"}。只輸出JSON，不要其他文字。`;
+    const text = await callGemini(prompt, 'flight');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const info = JSON.parse(clean);
+    if(info.dep) $(`fdep_${id}`).value=info.dep;
+    if(info.arr) $(`farr_${id}`).value=info.arr;
+    if(info.airline&&!$(`fal_${id}`).value) $(`fal_${id}`).value=info.airline;
+    if(info.from&&!$(`ff_${id}`).value) $(`ff_${id}`).value=info.from;
+    if(info.to&&!$(`ft_${id}`).value) $(`ft_${id}`).value=info.to;
+    setFlightStatus(id,'ok',`✅ ${info.from||''}→${info.to||''}${info.note?' ('+info.note+')':''}`);
+  }catch(e){
+    // Fallback: airline prefix recognition
+    const prefix=num.match(/^[A-Z]{2}/)?.[0]||'';
+    const airlines={'CI':'中華航空','BR':'長榮航空','IT':'台灣虎航','OZ':'韓亞航空',
+      'KE':'大韓航空','JL':'日本航空','NH':'全日空','CZ':'中國南方航空',
+      'TG':'泰國航空','SQ':'新加坡航空','MH':'馬來西亞航空','CX':'國泰航空',
+      'JX':'星宇航空','AE':'華信航空'};
+    if(airlines[prefix]&&!$(`fal_${id}`).value){
+      $(`fal_${id}`).value=airlines[prefix];
+      setFlightStatus(id,'ok',`✅ 辨識航空：${airlines[prefix]}（請手動填時間）`);
+    } else {
+      setFlightStatus(id,'err','⚠️ 查詢失敗，請手動填寫');
+    }
+  }
+}
+function setFlightStatus(id,cls,msg){
+  const el=$(`fst_${id}`); if(!el)return;
+  el.className='flight-status '+cls; el.textContent=msg;
+}
+
+function getFlights(){
+  return[...$('flightList').querySelectorAll('.flight-entry')].map(e=>{
+    const id=e.id.replace('fe_','');
+    return{from:($(`ff_${id}`)?.value||'').trim(),to:($(`ft_${id}`)?.value||'').trim(),
+      date:$(`fd_${id}`)?.value||'',dep:$(`fdep_${id}`)?.value||'',arr:$(`farr_${id}`)?.value||'',
+      airline:($(`fal_${id}`)?.value||'').trim(),num:($(`fnum_${id}`)?.value||'').trim()};
+  });
+}
+
+// ══════════════════════════════════════
+// 4. HOTEL RECOMMENDATION
+// ══════════════════════════════════════
+function addHotel(name='',area='',checkin='',checkout=''){
+  hotelCnt++;
+  const id=hotelCnt;
+  const aval=area||(currentAreas[0]||'');
+  const ci=checkin||($('startDate').value||'');
+  const co=checkout||($('endDate').value||'');
+  const entry=document.createElement('div');
+  entry.className='hotel-entry'; entry.id=`he_${id}`;
+  entry.innerHTML=`
+    <div class="entry-header">
+      <div class="entry-label">🏨 飯店 ${id}</div>
+      <button type="button" class="remove-btn" onclick="$('he_${id}').remove()">✕</button>
+    </div>
+    <div class="hotel-entry-fields">
+      <div class="full form-group"><label>🏨 飯店名稱</label><input type="text" id="hn_${id}" value="${name}" placeholder="例：海雲台格蘭德飯店"></div>
+      <div class="full form-group"><label>📍 住宿區域</label>
+        <input type="text" id="ha_${id}" value="${aval}" placeholder="例：海雲台">
+        <div class="area-chips" id="hc_${id}" data-hchips="${id}"></div>
+      </div>
+      <div class="form-group"><label>📅 入住</label><input type="date" id="hi_${id}" value="${ci}"></div>
+      <div class="form-group"><label>📅 退房</label><input type="date" id="ho_${id}" value="${co}"></div>
+    </div>
+    <button class="hotel-recommend-btn" id="recBtn_${id}" onclick="recommendHotels(${id})">
+      🏨 推薦飯店
+    </button>
+    <div id="hotelRecs_${id}" class="hotel-recs"></div>`;
+  $('hotelList').appendChild(entry);
+  fillChips($(`hc_${id}`), id);
+}
+
+function fillChips(el, hid){
+  if(!el)return; el.innerHTML='';
+  currentAreas.forEach(a=>{
+    const c=document.createElement('button');
+    c.type='button'; c.className='achip'; c.textContent=a;
+    c.onclick=()=>$(`ha_${hid}`).value=a;
+    el.appendChild(c);
+  });
+}
+
+async function recommendHotels(hid){
+  const btn=$(`recBtn_${hid}`);
+  const recs=$(`hotelRecs_${hid}`);
+  const dest=getDestName();
+  const area=($(`ha_${hid}`)?.value||dest).trim();
+  btn.disabled=true; btn.textContent='⏳ 搜尋中…';
+  recs.innerHTML='<div style="font-size:12px;color:#A08060;padding:6px;">Gemini 正在搜尋推薦飯店…</div>';
+  try{
+    const prompt=`請推薦${dest}${area}地區3-5間評價優良的飯店（使用Google搜尋最新資料）。只回傳JSON陣列，每筆包含：name（飯店名稱）、area（區域）、stars（1-5數字）、priceRange（價格範圍，如 NT$2000-3500/晚）、highlight（一句特色，繁體中文20字內）。只輸出JSON陣列，不要其他文字。`;
+    const text = await callGemini(prompt, 'hotel');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const hotels = JSON.parse(clean);
+    recs.innerHTML='';
+    hotels.forEach(h=>{
+      const stars='⭐'.repeat(Math.min(Math.round(h.stars||4),5));
+      const card=document.createElement('div');
+      card.className='hotel-rec-card';
+      const safeName=(h.name||'').replace(/'/g,"\'");
+      card.innerHTML=`
+        <div style="flex:1">
+          <div class="rec-star">${stars}</div>
+          <div class="rec-name">${h.name||''}</div>
+          <div class="rec-area">📍 ${h.area||area}</div>
+          <div style="font-size:11px;color:#7A8090;margin-top:2px;">${h.highlight||''}</div>
+          <div class="rec-price">${h.priceRange||''}</div>
+        </div>
+        <button class="use-rec-btn" onclick="useHotelRec('${safeName}','${h.area||area}',${hid})">使用</button>`;
+      recs.appendChild(card);
+    });
+  }catch(e){
+    recs.innerHTML=`<div style="font-size:12px;color:#E05040;padding:6px;">搜尋失敗：${e.message}</div>`;
+  }
+  btn.disabled=false; btn.textContent='🏨 推薦飯店';
+}
+
+function useHotelRec(name,area,hid){
+  if($(`hn_${hid}`)) $(`hn_${hid}`).value=name;
+  if($(`ha_${hid}`)) $(`ha_${hid}`).value=area;
+  $(`hotelRecs_${hid}`).innerHTML='';
+}
+
+function getHotels(){
+  return[...$('hotelList').querySelectorAll('.hotel-entry')].map(e=>{
+    const id=e.id.replace('he_','');
+    const n=($(`hn_${id}`)?.value||'').trim(), a=($(`ha_${id}`)?.value||'').trim();
+    if(n||a)return{name:n||'精選飯店',area:a,checkin:$(`hi_${id}`)?.value||'',checkout:$(`ho_${id}`)?.value||''};
+    return null;
+  }).filter(Boolean);
+}
+
+// ══════════════════════════════════════
+// DATE UTILS
+// ══════════════════════════════════════
+function fmtFull(s){const d=new Date(s);return`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（週${WD[d.getDay()]}）`;}
+function fmtMD(s){const d=new Date(s);return`${d.getMonth()+1}月${d.getDate()}日`;}
+function fmtWD(s){const d=new Date(s);return WD[d.getDay()];}
+function addDays(s,n){const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
+function getDays(){if(!$('startDate').value||!$('endDate').value)return null;return Math.round((new Date($('endDate').value)-new Date($('startDate').value))/86400000)+1;}
+function toMin(t){if(!t)return 0;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function addT(t,m){const tot=toMin(t)+m;return`${String(Math.floor(tot/60)%24).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;}
+function subT(t,m){const tot=toMin(t)-m;return`${String(Math.floor((tot+1440)/60)%24).padStart(2,'0')}:${String(((tot%60)+60)%60).padStart(2,'0')}`;}
+
+function updateBadge(){
+  const d=getDays(); $('errorMsg').style.display='none';
+  if(!d){$('daysBadge').innerHTML='請選擇日期以計算天數 🐾';return;}
+  if(d<=0){$('daysBadge').innerHTML='請選擇日期以計算天數 🐾';$('errorMsg').style.display='block';return;}
+  $('daysBadge').innerHTML=`共 <span class="big">${d}</span> 天 ${d-1} 夜旅程 🐾`;
+}
+
+// ══════════════════════════════════════
+// 5. AI ITINERARY via Gemini Backend
+// ══════════════════════════════════════
+async function generateAIItinerary(){
+  const days=getDays();
+  if(!days||days<=0){alert('請先選擇出發與回程日期');return;}
+  const dest=getDestName();
+  const btn=$('aiBtn'), status=$('aiStatus');
+  btn.disabled=true; btn.textContent='⏳ Gemini 規劃中…';
+  status.textContent='✨ Google Gemini 正在為您生成專屬行程，請稍候…';
+  try{
+    const flights=getFlights();
+    const arrTime=flights[0]?.arr||'10:00';
+    const retTime=flights[flights.length-1]?.dep||'18:00';
+    const hotels=getHotels();
+    const area=hotels[0]?.area||dest;
+    const prompt=`請為${dest}${days}天旅遊規劃詳細行程。去程抵達時間：${arrTime}，回程出發時間：${retTime}，住宿區域：${area}。回傳純JSON格式：{"days":[{"dayIndex":0,"items":[{"t":"HH:MM","txt":"🏯 景點或活動名稱"}]}]}。規則：dayIndex從0開始共${days}天，第一天從${arrTime}開始，最後一天在${retTime}前結束，每天4-6個行程點包含早午晚，文字用繁體中文帶emoji，只輸出JSON不要任何說明文字。`;
+    const rawText = await callGemini(prompt, 'itinerary');
+    const clean = rawText.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    if(parsed.days){
+      parsed.days.forEach(d=>{aiGeneratedDays[d.dayIndex]=d.items;});
+      rebuildDayRows();
+      status.textContent=`✅ Gemini 已生成 ${days} 天行程！可切換手動模式修改任何一天`;
+      localStorage.setItem('snoopy_ai_days', JSON.stringify(aiGeneratedDays));
+    }
+  }catch(e){
+    status.textContent=`⚠️ 生成失敗：${e.message}`;
+    console.error(e);
+  }
+  btn.disabled=false; btn.textContent='✨ 重新生成行程';
+}
+
+// ══════════════════════════════════════
+// 6. WEATHER
+// ══════════════════════════════════════
+const WEATHER_ICONS={
+  Clear:'☀️',Clouds:'☁️',Rain:'🌧️',Drizzle:'🌦️',
+  Thunderstorm:'⛈️',Snow:'❄️',Mist:'🌫️',default:'🌤️'
+};
+const SNOOPY_WEATHER={
+  Clear:'太陽下的史努比 ☀️🐶',Clouds:'Snoopy 抬頭看雲 ☁️',
+  Rain:'史努比撐傘出遊 ☂️🐾',Snow:'史努比玩雪 ⛄',default:'史努比看天氣 🐶'
+};
+function clothingTip(temp){
+  if(temp>=30)return'🌡️ 超熱！薄短袖＋防曬必備';
+  if(temp>=25)return'👕 短袖即可，帶把折疊傘';
+  if(temp>=20)return'🧥 長袖或薄外套';
+  if(temp>=15)return'🧣 建議帶件薄外套或風衣';
+  if(temp>=8)return'🧥 需要厚外套';
+  return'🧤 大衣＋手套＋保暖必備';
+}
+
+async function fetchWeather(dest, dateStr, dayBlockId){
+  const cacheKey=`${dest}_${dateStr}`;
+  if(weatherCache[cacheKey]){renderWeather(dayBlockId, weatherCache[cacheKey]);return;}
+  const info=DEST_DATA[dest];
+  if(!info)return;
+  const today=new Date(); const tripDate=new Date(dateStr);
+  const diffDays=Math.round((tripDate-today)/86400000);
+  if(diffDays<=7&&diffDays>=0){
+    // Use open-meteo (no API key needed!)
+    try{
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${info.lat}&longitude=${info.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`;
+      const r=await fetch(url);
+      const d=await r.json();
+      if(d.daily){
+        const wc=d.daily.weathercode?.[0]||0;
+        const icon=wcToIcon(wc);
+        const tmax=Math.round(d.daily.temperature_2m_max?.[0]||20);
+        const tmin=Math.round(d.daily.temperature_2m_min?.[0]||15);
+        const rain=d.daily.precipitation_probability_max?.[0]||0;
+        const w={icon,tmax,tmin,rain,type:'forecast'};
+        weatherCache[cacheKey]=w;
+        renderWeather(dayBlockId,w);
+        return;
+      }
+    }catch(e){}
+  }
+  // Fallback: monthly average
+  const month=new Date(dateStr).getMonth();
+  const avgs=MONTHLY_AVG[dest];
+  if(avgs){
+    const avg=avgs[month];
+    const w={icon:'📅',tmax:avg+4,tmin:avg-4,rain:null,type:'historical',avg};
+    weatherCache[cacheKey]=w;
+    renderWeather(dayBlockId,w);
+  }
+}
+
+function wcToIcon(wc){
+  if(wc<=1)return'☀️';if(wc<=3)return'⛅';if(wc<=49)return'🌫️';
+  if(wc<=69)return'🌧️';if(wc<=79)return'❄️';if(wc<=82)return'🌦️';
+  if(wc<=99)return'⛈️';return'🌤️';
+}
+
+function renderWeather(blockId, w){
+  const block=$(blockId); if(!block)return;
+  let old=block.querySelector('.day-weather'); if(old)old.remove();
+  const list=block.querySelector('.sched-list');
+  const div=document.createElement('div');
+  div.className='day-weather';
+  const label=w.type==='forecast'?'今日預報':'歷史均溫（參考）';
+  const rainStr=w.rain!=null?`💧 降雨機率 ${w.rain}%`:'';
+  div.innerHTML=`
+    <div class="weather-icon">${w.icon}</div>
+    <div>
+      <div class="weather-info">${label}</div>
+      <div class="weather-temp">${w.tmin}°C ～ ${w.tmax}°C</div>
+      <div class="weather-tip">${clothingTip(Math.round((w.tmax+w.tmin)/2))} ${rainStr}</div>
+    </div>`;
+  if(list) block.insertBefore(div,list);
+  else block.appendChild(div);
+}
+
+// ══════════════════════════════════════
+// DEFAULT ITINERARY (fallback)
+// ══════════════════════════════════════
+function getDefaultItems(i,total,arr,ret,area){
+  if(total===1)return[{t:arr,txt:`✈️ 抵達機場`},{t:addT(arr,90),txt:`🚌 Check-in`},{t:'15:00',txt:`📍 ${area}輕鬆遊覽`},{t:subT(ret,150),txt:`🚌 前往機場`},{t:ret,txt:`✈️ 回程航班`}];
+  if(i===0){const h=parseInt(arr);
+    if(h<11)return[{t:arr,txt:`✈️ 抵達機場，辦理入境`},{t:addT(arr,90),txt:`🚌 ${area}飯店 Check-in`},{t:'14:00',txt:`📍 ${area}周邊景點`},{t:'18:00',txt:`🍜 歡迎晚餐`}];
+    if(h<15)return[{t:arr,txt:`✈️ 抵達機場，辦理入境`},{t:addT(arr,90),txt:`🚌 ${area}飯店 Check-in`},{t:'17:00',txt:`🛍️ ${area}商圈散策`},{t:'19:00',txt:`🍽️ 特色晚餐`}];
+    return[{t:arr,txt:`✈️ 抵達機場，辦理入境`},{t:addT(arr,90),txt:`🚌 ${area}飯店 Check-in`},{t:'20:00',txt:`🌃 ${area}夜市探索`}];
+  }
+  if(i===total-1){const ap=subT(ret,150);
+    if(parseInt(ret)<12)return[{t:'07:00',txt:'🍳 早餐後退房'},{t:'08:00',txt:'🚌 前往機場'},{t:ret,txt:'✈️ 回程航班 🐾'}];
+    if(parseInt(ret)<17)return[{t:'08:00',txt:'🍳 早餐'},{t:'09:30',txt:'🛍️ 最後採購伴手禮'},{t:'12:00',txt:'🍜 午餐'},{t:ap,txt:'🚌 前往機場'},{t:ret,txt:'✈️ 回程航班 🐾'}];
+    return[{t:'08:00',txt:'🍳 早餐後退房'},{t:'09:30',txt:'📍 上午景點'},{t:'12:00',txt:'🍱 午餐'},{t:'14:00',txt:'🛍️ 採購'},{t:ap,txt:'🚌 前往機場'},{t:ret,txt:'✈️ 回程航班 🐾'}];
+  }
+  // Generic mid days
+  const mids=[
+    [{t:'08:30',txt:'🍳 飯店早餐'},{t:'09:30',txt:'📍 上午景點探索'},{t:'12:00',txt:'🍜 道地午餐'},{t:'14:00',txt:'📍 下午文化體驗'},{t:'18:00',txt:'🛍️ 傍晚購物'},{t:'19:30',txt:'🌃 特色晚餐'}],
+    [{t:'08:00',txt:'🌅 早起特色景點（人少）'},{t:'10:00',txt:'☕ 咖啡館休息'},{t:'12:00',txt:'🍱 午餐'},{t:'14:00',txt:'🎨 藝文區漫遊'},{t:'17:00',txt:'🛍️ 購物街'},{t:'19:30',txt:'🌙 夜市探索'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🚌 半日遊（郊外）'},{t:'13:00',txt:'🥢 當地特色午餐'},{t:'15:00',txt:'♨️ 溫泉或體驗活動'},{t:'18:30',txt:'🍺 道地晚餐'}],
+  ];
+  return mids[(i-1)%mids.length];
+}
+
+// ══════════════════════════════════════
+// REBUILD DAY ROWS
+// ══════════════════════════════════════
+function rebuildDayRows(){
+  const days=getDays(); const c=$('dayRows'); c.innerHTML='';
+  if(!days||days<=0)return;
+  const flights=getFlights();
+  const arr=flights[0]?.arr||'10:00';
+  const ret=(flights.length>1?flights[flights.length-1]:flights[0])?.dep||'18:00';
+  const hotels=getHotels();
+  const area=hotels[0]?.area||getDestName();
+
+  for(let i=0;i<days;i++){
+    const ds=addDays($('startDate').value,i);
+    const isFirst=i===0, isLast=i===days-1;
+    const hasAI=!!aiGeneratedDays[i];
+    const autoItems=hasAI?aiGeneratedDays[i]:getDefaultItems(i,days,arr,ret,area);
+    const modeLabel=hasAI?'🤖 AI生成':'✨ 系統預設';
+    const modeCls=hasAI?'ai':'auto';
+    const block=document.createElement('div');
+    block.className=`day-block${hasAI?' ai-mode':''}`;
+    block.id=`db_${i}`;
+    block.innerHTML=`
+      <div class="day-block-header">
+        <div class="day-block-left">
+          <span class="day-title">Day ${i+1}${isFirst?' 🛬':isLast?' 🛫':''}</span>
+          <span class="day-date">${fmtMD(ds)}（週${fmtWD(ds)}）</span>
+          <span class="mode-badge ${modeCls}" id="mb_${i}">${modeLabel}</span>
+        </div>
+        <div class="toggle-wrap">
+          <span style="font-size:10px;font-weight:800;color:#A08060">自動</span>
+          <label class="toggle-sw"><input type="checkbox" id="tog_${i}" onchange="onToggle(${i})"><span class="toggle-sl"></span></label>
+          <span style="font-size:10px;font-weight:800;color:#C07040">手動</span>
+        </div>
+      </div>
+      <div class="weather-loading" id="wl_${i}">⏳ 載入天氣…</div>
+      <div class="sched-list" id="sl_${i}"></div>
+      <button type="button" class="add-sched-btn" onclick="addSchedRow(${i},null,'','',false)">＋ 新增時間點</button>`;
+    c.appendChild(block);
+    autoItems.forEach(item=>addSchedRow(i,null,item.t,item.txt,true));
+    // Load weather async
+    loadWeatherForDay(i, ds);
+  }
+}
+
+async function loadWeatherForDay(i, ds){
+  const dest=currentDest==='custom'?($('customCity')?.value||''):currentDest;
+  const wl=$(`wl_${i}`); if(wl)wl.textContent='';
+  if(DEST_DATA[dest]||MONTHLY_AVG[dest]){
+    await fetchWeather(dest,ds,`db_${i}`);
+  }
+}
+
+// ══════════════════════════════════════
+// SCHED ROW (with drag & drop)
+// ══════════════════════════════════════
+function addSchedRow(dayIdx, insertBefore, timeVal='', txtVal='', isDefault=false){
+  const container=$(`sl_${dayIdx}`); if(!container)return;
+  const row=document.createElement('div');
+  row.className='sched-row'; row.draggable=true; row.dataset.di=dayIdx;
+  const uid=`sr_${dayIdx}_${Date.now()}_${Math.random().toString(36).slice(2,5)}`;
+  row.id=uid;
+  row.innerHTML=`
+    <span class="drag-handle" title="拖曳排序">⠿</span>
+    <div class="sched-t"><input type="time" value="${timeVal}" onchange="checkConflicts(${dayIdx})" title="時間"></div>
+    <div class="sched-x">
+      <input type="text"
+        value="${isDefault?'':txtVal}"
+        placeholder="${isDefault?txtVal:'輸入行程內容'}"
+        class="${isDefault?'is-def':'is-cust'}"
+        data-def="${txtVal.replace(/"/g,'&quot;')}"
+        oninput="onTextInput(this,${dayIdx})"
+        onfocus="if(this.classList.contains('is-def'))this.style.color='#7A5C3A'"
+        onblur="this.style.color=''">
+      <span class="conflict-tag">⚠️重疊</span>
+    </div>
+    <button type="button" class="map-btn" onclick="openMap(this)" title="地圖查詢">📍</button>
+    <button type="button" class="del-btn" onclick="this.closest('.sched-row').remove();checkConflicts(${dayIdx})">✕</button>`;
+
+  // Drag events
+  row.addEventListener('dragstart',e=>{e.dataTransfer.setData('text',dayIdx);row.classList.add('dragging');dragSrc=row;});
+  row.addEventListener('dragend',()=>{row.classList.remove('dragging');clearDO();checkConflicts(dayIdx);});
+  row.addEventListener('dragover',e=>{e.preventDefault();clearDO();row.classList.add('drag-over');});
+  row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));
+  row.addEventListener('drop',e=>{
+    e.preventDefault();row.classList.remove('drag-over');
+    if(dragSrc&&dragSrc!==row){
+      const rows=[...container.children],fi=rows.indexOf(dragSrc),ti=rows.indexOf(row);
+      if(fi<ti)container.insertBefore(dragSrc,row.nextSibling);
+      else container.insertBefore(dragSrc,row);
+      checkConflicts(dayIdx);
+    }
+  });
+
+  if(insertBefore)container.insertBefore(row,insertBefore);
+  else container.appendChild(row);
+}
+
+function clearDO(){document.querySelectorAll('.drag-over').forEach(e=>e.classList.remove('drag-over'));}
+
+function onToggle(i){
+  const on=$(`tog_${i}`).checked;
+  const b=$(`db_${i}`), mb=$(`mb_${i}`);
+  b.classList.toggle('manual-mode',on);
+  b.classList.toggle('ai-mode',!on&&!!aiGeneratedDays[i]);
+  if(on){mb.className='mode-badge manual';mb.textContent='📝 自定義';}
+  else{const hasAI=!!aiGeneratedDays[i];mb.className='mode-badge '+(hasAI?'ai':'auto');mb.textContent=hasAI?'🤖 AI生成':'✨ 系統預設';}
+}
+
+// 4. Smart Overwrite
+function onTextInput(inp,dayIdx){
+  const val=inp.value.trim();
+  if(val===''){inp.classList.add('is-def');inp.classList.remove('is-cust');inp.placeholder=inp.dataset.def||inp.placeholder;}
+  else{inp.classList.remove('is-def');inp.classList.add('is-cust');}
+  checkConflicts(dayIdx);
+}
+
+function checkConflicts(di){
+  const rows=[...(document.querySelectorAll(`#sl_${di} .sched-row`)||[])];
+  const times=rows.map(r=>toMin(r.querySelector('input[type="time"]')?.value||''));
+  rows.forEach((r,i)=>{r.classList.toggle('conflict',i>0&&times[i]>0&&times[i-1]>0&&times[i]<times[i-1]);});
+}
+
+function getFinalItems(di){
+  return[...(document.querySelectorAll(`#sl_${di} .sched-row`)||[])].map(row=>{
+    const t=row.querySelector('input[type="time"]')?.value||'';
+    const inp=row.querySelector('.sched-x input');
+    const txt=inp.value.trim()||inp.placeholder||'';
+    return{t,txt};
+  }).filter(r=>r.t&&r.txt);
+}
+
+// ══════════════════════════════════════
+// MAP MODAL
+// ══════════════════════════════════════
+function openMap(btn){
+  mapTargetInput=btn.closest('.sched-row').querySelector('.sched-x input');
+  const q=mapTargetInput.value.trim()||mapTargetInput.placeholder||getDestName();
+  $('mapQ').value=q; searchMap(q);
+  $('mapModal').classList.add('show');
+}
+function searchMap(q){
+  if(!q||q.length<2)return;
+  mapQuery=q;
+  const dest=getDestName();
+  const full=encodeURIComponent(`${q} ${dest}`);
+  $('mapFrame').src=`https://maps.google.com/maps?q=${full}&output=embed&hl=zh-TW`;
+  $('mapInfo').textContent=`🔍 搜尋：${q} · ${dest}`;
+}
+function applyMap(){
+  if(mapTargetInput&&mapQuery){
+    mapTargetInput.value=mapQuery;
+    mapTargetInput.classList.remove('is-def');mapTargetInput.classList.add('is-cust');
+    const row=mapTargetInput.closest('.sched-row');
+    if(row)checkConflicts(parseInt(row.dataset.di||0));
+  }
+  closeMap();
+}
+function closeMap(){$('mapModal').classList.remove('show');$('mapFrame').src='';mapTargetInput=null;}
+
+// ══════════════════════════════════════
+// DEST INFO
+// ══════════════════════════════════════
+function getDestName(){return currentDest==='custom'?($('customCity')?.value||'目的地'):currentDest;}
+function getDestInfo(){
+  if(currentDest==='custom')return{dest:$('customCity').value.trim()||'目的地',airport:$('customAirport').value.trim()||'當地機場',emoji:'✈️'};
+  return{dest:currentDest,...DEST_DATA[currentDest]};
+}
+
+// ══════════════════════════════════════
+// GENERATE HTML OUTPUT
+// ══════════════════════════════════════
+function buildOutputHTML(info,days,start,end,flights,hotels,allItems){
+  const flightCards=flights.length===0?'<p style="color:#A08060;font-size:13px;padding:10px;">尚未填寫航班資訊</p>':
+    flights.map((f,i)=>{
+      const c=PASTEL[i%PASTEL.length],b=PBDR[i%PBDR.length],tc=PTC[i%PTC.length];
+      return`<div style="background:${c};border:2px solid ${b};border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="font-size:26px;">✈️</div>
+        <div style="flex:1;min-width:160px;">
+          <div style="font-size:10px;font-weight:900;letter-spacing:2px;color:${tc};text-transform:uppercase;">航段 ${i+1}${f.num?' · '+f.num:''}</div>
+          <div style="font-size:15px;font-weight:900;color:#3B2A1A;">${f.from||'—'} → ${f.to||'—'}</div>
+          ${f.airline?`<div style="font-size:11px;color:#7A5C3A;font-weight:700;">${f.airline}</div>`:''}
+        </div>
+        <div style="text-align:right;">
+          ${f.date?`<div style="font-size:11px;color:${tc};font-weight:800;">${fmtMD(f.date)}</div>`:''}
+          <div style="font-size:17px;font-weight:900;color:#3B2A1A;">${f.dep||'–'} → ${f.arr||'–'}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+  const hotelCards=hotels.length===0?'<p style="color:#A08060;font-size:13px;padding:10px;">尚未填寫住宿資訊</p>':
+    hotels.map((h,i)=>{
+      const c=PASTEL[i%PASTEL.length],b=PBDR[i%PBDR.length],tc=PTC[i%PTC.length];
+      const nights=h.checkin&&h.checkout?Math.round((new Date(h.checkout)-new Date(h.checkin))/86400000):null;
+      return`<div style="background:${c};border:2px solid ${b};border-radius:14px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
+        <div style="font-size:28px;">🏠</div>
+        <div>
+          <div style="font-size:15px;font-weight:900;color:#3B2A1A;">${h.name}</div>
+          ${h.area?`<div style="font-size:11px;color:#7A5C3A;font-weight:700;margin-top:2px;">📍 ${h.area}</div>`:''}
+          ${h.checkin&&h.checkout?`<div style="font-size:11px;color:${tc};font-weight:800;margin-top:3px;">🗓️ ${fmtMD(h.checkin)} ～ ${fmtMD(h.checkout)}${nights?` (${nights}晚)`:''}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+  const dayBlocks=allItems.map((items,i)=>{
+    const ds=addDays(start,i);
+    const c=PASTEL[i%PASTEL.length],b=PBDR[i%PBDR.length],tc=PTC[i%PTC.length];
+    const tag=i===0?'🛬 抵達日':i===days-1?'🛫 回程日':`Day ${i+1}`;
+    const todayH=hotels.find(h=>h.checkin&&h.checkout&&ds>=h.checkin&&ds<h.checkout);
+    const wk=`${info.dest}_${ds}`;
+    const wdata=weatherCache[wk];
+    const weatherHTML=wdata?`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:linear-gradient(135deg,#EEF6FF,#E8F8FF);border-radius:9px;border:1.5px solid #B8DAFF;margin-bottom:10px;flex-wrap:wrap;">
+      <span style="font-size:20px;">${wdata.icon}</span>
+      <div>
+        <div style="font-size:11px;font-weight:800;color:#3366AA;">${wdata.type==='forecast'?'當日預報':'歷史均溫參考'}</div>
+        <div style="font-size:13px;font-weight:900;color:#2255AA;">${wdata.tmin}°C ～ ${wdata.tmax}°C${wdata.rain!=null?' 💧'+wdata.rain+'%':''}</div>
+        <div style="font-size:10px;color:#5588AA;font-weight:700;">${clothingTip(Math.round((wdata.tmax+wdata.tmin)/2))}</div>
+      </div>
+    </div>`:'';
+    const rows=items.map(it=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed ${b};">
+      <div style="min-width:44px;font-size:11px;font-weight:900;color:${tc};padding-top:2px;">${it.t}</div>
+      <div style="flex:1;font-size:13px;color:#3B2A1A;line-height:1.5;">${it.txt}</div>
+      <a href="https://maps.google.com/?q=${encodeURIComponent(it.txt.replace(/^[^\s]+\s/,''))+'+'+encodeURIComponent(info.dest)}" target="_blank" style="font-size:11px;color:${tc};text-decoration:none;flex-shrink:0;" title="Google Maps">📍</a>
+    </div>`).join('');
+    return`<div style="background:${c};border:2px solid ${b};border-radius:18px;padding:18px 20px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="background:${tc};color:white;border-radius:10px;padding:3px 11px;font-size:10px;font-weight:900;">${tag}</div>
+        <div style="font-family:'Caveat',cursive;font-size:19px;font-weight:700;color:${tc};">${fmtMD(ds)}（週${fmtWD(ds)}）</div>
+        ${todayH?`<span style="font-size:10px;background:white;border-radius:20px;padding:2px 9px;color:${tc};font-weight:800;border:1.5px solid ${b};">🏨 ${todayH.name}</span>`:''}
+      </div>
+      ${weatherHTML}${rows}
+    </div>`;
+  }).join('');
+
+  const tripTitle=localStorage.getItem('snoopy_title')||'我的旅遊行程';
+
+  return`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${tripTitle} · ${info.dest} 🐾</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(155deg,#FFF4E8,#FFF0F8,#F0F4FF);min-height:100vh;padding:0 0 60px;}
+.hero{background:linear-gradient(135deg,#FF8C42,#FF5C1A);padding:40px 24px 28px;text-align:center;position:relative;overflow:hidden;}
+.hero::before,.hero::after{content:'🐾';position:absolute;opacity:.07;font-size:180px;}
+.hero::before{top:-20px;right:-20px;}
+.hero::after{bottom:-20px;left:-10px;font-size:100px;}
+.htag{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.8);font-weight:800;text-transform:uppercase;}
+.htitle{font-family:'Caveat',cursive;font-size:38px;font-weight:700;color:white;margin:6px 0 2px;text-shadow:2px 3px 0 rgba(0,0,0,.1);}
+.hsub{font-size:13px;color:rgba(255,255,255,.85);font-weight:700;}
+.hdates{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.2);border-radius:30px;padding:7px 18px;margin-top:12px;font-size:12px;font-weight:800;color:white;}
+.w{font-size:24px;animation:fl 1.5s infinite;}
+@keyframes fl{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-6px) rotate(5deg)}}
+.content{max-width:640px;margin:0 auto;padding:20px 14px;}
+.sh{display:flex;align-items:center;gap:8px;margin:18px 0 10px;}
+.sh::before{content:'';flex:1;height:1.5px;background:linear-gradient(90deg,transparent,#FFE0C0);}
+.sh::after{content:'';flex:1;height:1.5px;background:linear-gradient(90deg,#FFE0C0,transparent);}
+.sh-t{font-size:11px;font-weight:900;color:#C07040;letter-spacing:2px;white-space:nowrap;}
+.notice{background:#FFF8F0;border:2px dashed #FFB870;border-radius:14px;padding:14px 16px;font-size:12px;color:#7A5C3A;line-height:2;}
+.footer{text-align:center;margin-top:28px;font-size:11px;color:#C0A080;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="htag">Snoopy Travel Agency · 史努比旅行社</div>
+  <div class="htitle">${tripTitle}</div>
+  <div class="hsub">史努比遊${info.dest} ${info.emoji||'✈️'}</div>
+  <div class="hdates"><span class="w">🐤</span>${fmtFull(start)} ～ ${fmtFull(end)} ｜ ${days}天${days-1}夜<span class="w">🐤</span></div>
+</div>
+<div class="content">
+  <div class="sh"><div class="sh-t">✈️ 航班資訊</div></div>
+  ${flightCards}
+  <div class="sh"><div class="sh-t">🏨 住宿飯店</div></div>
+  ${hotelCards}
+  <div class="sh"><div class="sh-t">📅 每日行程</div></div>
+  ${dayBlocks}
+  <div class="sh"><div class="sh-t">📌 注意事項</div></div>
+  <div class="notice">🐾 請於航班起飛前 <b>2–3 小時</b>抵達機場<br>🐾 行程如有異動，以領隊現場通知為準<br>🐾 旅遊平安險請出發前自行投保<br>🐾 本行程由 <b>史努比旅行社</b> 製作，祝旅途愉快！</div>
+  <div class="footer"><span style="font-size:28px;display:block;margin-bottom:3px;">🐾</span>Snoopy Travel Agency · 史努比旅行社<br>製作：${new Date().toLocaleDateString('zh-TW')}</div>
+</div>
+</body></html>`;
+}
+
+let genHTML='';
+
+function generate(){
+  const days=getDays();
+  if(!days||days<=0){$('errorMsg').style.display='block';return;}
+  const info=getDestInfo();
+  const start=$('startDate').value, end=$('endDate').value;
+  const flights=getFlights(), hotels=getHotels();
+  const allItems=[];
+  for(let i=0;i<days;i++) allItems.push(getFinalItems(i));
+  genHTML=buildOutputHTML(info,days,start,end,flights,hotels,allItems);
+  const tp=$('travelPage');
+  tp.innerHTML=`<iframe srcdoc="" style="width:100%;border:none;border-radius:20px;min-height:600px;" id="pf"></iframe>`;
+  const f=$('pf');
+  f.addEventListener('load',()=>{try{f.style.height=f.contentDocument.body.scrollHeight+40+'px';}catch(e){}});
+  f.srcdoc=genHTML;
+  $('outputArea').classList.add('show');
+  $('cpBtn').textContent='📋 複製 HTML'; $('cpBtn').classList.remove('copied');
+  setTimeout(()=>$('outputArea').scrollIntoView({behavior:'smooth'}),120);
+  saveState();
+}
+
+function downloadPage(){
+  const info=getDestInfo();
+  const blob=new Blob([genHTML],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`史努比遊${info.dest}_行程.html`; a.click();
+}
+
+function copyHtml(){
+  navigator.clipboard.writeText(genHTML).then(()=>{
+    const b=$('cpBtn'); b.textContent='✅ 已複製'; b.classList.add('copied');
+    setTimeout(()=>{b.textContent='📋 複製 HTML';b.classList.remove('copied');},2000);
+  });
+}
+
+// ══════════════════════════════════════
+// LOCALSTORAGE PERSISTENCE
+// ══════════════════════════════════════
+function saveState(){
+  try{
+    localStorage.setItem('snoopy_dest', currentDest);
+    localStorage.setItem('snoopy_start', $('startDate').value||'');
+    localStorage.setItem('snoopy_end', $('endDate').value||'');
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    const title=localStorage.getItem('snoopy_title');
+    if(title) $('tripTitle').textContent=title+' ✏️';
+    const aiDays=localStorage.getItem('snoopy_ai_days');
+    if(aiDays) aiGeneratedDays=JSON.parse(aiDays);
+    const start=localStorage.getItem('snoopy_start');
+    const end=localStorage.getItem('snoopy_end');
+    if(start){$('startDate').value=start;}
+    if(end){$('endDate').value=end;}
+    if(start||end){updateBadge();}
+  }catch(e){}
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+loadState();
+addFlight('台灣', DEST_DATA['釜山'].areas[0]||'');
+addFlight(DEST_DATA['釜山'].areas[0]||'', '台灣');
+addHotel();
+if($('startDate').value && $('endDate').value) rebuildDayRows();
+</script>
+</body>
+</html>
