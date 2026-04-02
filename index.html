@@ -1178,8 +1178,8 @@ async function generateAIItinerary(){
     rebuildDayRows();
 
     const sourceMsg = {
-      cache:    '✅ 已從快取載入行程（本次不耗 API）',
-      template: '✅ 已用內建模板生成行程（本次不耗 API）',
+      cache:    '✅ 已載入行程',
+      template: '✅ 已生成行程',
       gemini:   '✅ Gemini 已生成行程！',
     }[source] || '✅ 行程生成完成';
     status.textContent = sourceMsg;
