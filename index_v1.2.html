@@ -32,39 +32,22 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(155deg,#FFF4E8 0
 .card-title{font-size:11px;font-weight:900;color:var(--tan);letter-spacing:2px;text-transform:uppercase;border-left:4px solid var(--or);padding-left:10px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
 
 /* DEST GRID */
-.dest-search-wrap{position:relative;margin-bottom:10px;}
-.dest-search-row{display:flex;gap:8px;align-items:center;}
-.dest-search-input{flex:1;padding:11px 14px;border:2px solid var(--bdrl);border-radius:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--br);background:var(--cr);outline:none;transition:border-color .2s;}
+.dest-search-wrap{position:relative;margin-bottom:12px;}
+.dest-search-input{width:100%;padding:11px 44px 11px 14px;border:2px solid var(--bdrl);border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--br);background:var(--cr);outline:none;transition:border-color .2s;}
 .dest-search-input:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,140,66,.12);}
-.dest-globe-btn{flex-shrink:0;width:42px;height:42px;border:2px solid var(--bdrl);border-radius:12px;background:var(--cr);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .17s;}
-.dest-globe-btn:hover{border-color:var(--or);background:#FFF0DC;}
-.dest-globe-btn.active{border-color:var(--ord);background:#FFF0DC;}
-/* Search results dropdown */
-.dest-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:52px;background:white;border:2px solid var(--bdrl);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1000;overflow:hidden;display:none;max-height:260px;overflow-y:auto;}
+.dest-search-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
+.dest-search-spinner{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:14px;animation:spin .8s linear infinite;display:none;}
+@keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
+.dest-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:2px solid var(--bdrl);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:999;overflow:hidden;display:none;}
 .dest-dropdown.show{display:block;}
-.dest-option{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--br);}
+.dest-option{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--br);}
 .dest-option:hover{background:#FFF0DC;}
-.dest-option .opt-flag{font-size:18px;flex-shrink:0;}
+.dest-option .opt-flag{font-size:20px;flex-shrink:0;}
 .dest-option .opt-city{font-weight:800;}
 .dest-option .opt-sub{font-size:11px;color:#A08060;margin-top:1px;}
-/* Popular cities panel */
-.popular-panel{position:absolute;top:calc(100% + 4px);right:0;width:240px;background:white;border:2px solid var(--bdrl);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1001;display:none;max-height:360px;overflow-y:auto;}
-.popular-panel.show{display:block;}
-.popular-country{padding:8px 14px 4px;font-size:10px;font-weight:900;color:var(--tan);letter-spacing:1px;text-transform:uppercase;background:#FFF8F0;border-bottom:1px solid var(--bdr);}
-.popular-city{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;font-size:13px;color:var(--br);transition:background .15s;}
-.popular-city:hover{background:#FFF0DC;}
-.popular-city .pc-flag{font-size:16px;}
-.popular-city .pc-name{font-weight:800;}
-.popular-city .pc-airport{font-size:10px;color:#A08060;margin-top:1px;}
-/* Selected badge */
 .dest-selected-badge{display:none;align-items:center;gap:8px;background:#FFF0DC;border:2px solid #FFB870;border-radius:10px;padding:8px 12px;margin-bottom:8px;font-size:13px;font-weight:800;color:var(--tan);}
 .dest-selected-badge.show{display:flex;}
 .dest-clear-btn{margin-left:auto;background:none;border:none;cursor:pointer;font-size:14px;color:#C07040;}
-/* Hotel area chips */
-.hotel-area-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
-.hotel-area-chip{font-size:11px;font-weight:800;color:var(--tan);background:#FFF0DC;border:1.5px solid var(--bdrl);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
-.hotel-area-chip:hover{background:#FFE0C0;border-color:var(--or);color:var(--ord);}
-.hotel-area-chip.selected{background:var(--or);color:white;border-color:var(--ord);}
 .custom-dest{display:none;margin-bottom:12px;}
 .custom-dest.show{display:block;}
 
@@ -252,18 +235,16 @@ input:focus,select:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,14
 <!-- MAIN FORM CARD -->
 <div class="card">
   <div class="card-title">🌏 旅遊目的地</div>
-  <!-- 目的地搜尋框 + 地球按鈕 -->
+  <!-- 目的地搜尋框 -->
   <div class="dest-search-wrap" id="destSearchWrap">
-    <div class="dest-search-row">
-      <input type="text" class="dest-search-input" id="destSearchInput"
-        placeholder="輸入目的地城市（例：東京、上海、曼谷）"
-        oninput="onDestInput(this.value)"
-        onblur="setTimeout(()=>hideDestDropdown(),200)"
-        autocomplete="off">
-      <button class="dest-globe-btn" id="destGlobeBtn" onclick="togglePopularPanel()" title="熱門城市">🌏</button>
-    </div>
+    <input type="text" class="dest-search-input" id="destSearchInput"
+      placeholder="🔍 輸入目的地城市（例：釜山、上海、Bangkok）"
+      oninput="onDestInput(this.value)"
+      onblur="setTimeout(()=>hideDestDropdown(),200)"
+      autocomplete="off">
+    <span class="dest-search-icon" id="destSearchIcon">🌏</span>
+    <span class="dest-search-spinner" id="destSpinner">⏳</span>
     <div class="dest-dropdown" id="destDropdown"></div>
-    <div class="popular-panel" id="popularPanel"></div>
   </div>
   <!-- 已選城市 badge -->
   <div class="dest-selected-badge" id="destBadge">
@@ -427,183 +408,87 @@ function onEndDate(val){
 // DEST
 // ══════════════════════════════════════
 // ══════════════════════════════════════
-// CITY DATABASE (offline, no API needed)
+// DESTINATION AUTOCOMPLETE
 // ══════════════════════════════════════
-const CITY_DB = [
-  // 🇹🇼 台灣
-  {city:'台北',country:'台灣',airport:'台灣桃園國際機場',iata:'TPE',emoji:'🇹🇼',areas:['信義','大安','中山','西門','士林','內湖','松山','中正']},
-  {city:'台中',country:'台灣',airport:'台中清泉崗機場',iata:'RMQ',emoji:'🇹🇼',areas:['西區','北區','逢甲','烏日','清水','大坑','霧峰']},
-  {city:'高雄',country:'台灣',airport:'高雄國際機場',iata:'KHH',emoji:'🇹🇼',areas:['鹽埕','左營','苓雅','前鎮','鳳山','三民','楠梓']},
-  {city:'台南',country:'台灣',airport:'台南機場',iata:'TNN',emoji:'🇹🇼',areas:['中西區','東區','安平','仁德','永康','新化','關廟']},
-  // 🇯🇵 日本
-  {city:'東京',country:'日本',airport:'成田國際機場',iata:'NRT',emoji:'🇯🇵',areas:['新宿','澀谷','淺草','銀座','原宿','秋葉原','上野','池袋']},
-  {city:'大阪',country:'日本',airport:'關西國際機場',iata:'KIX',emoji:'🇯🇵',areas:['道頓堀','心齋橋','難波','梅田','新世界','天王寺','天滿']},
-  {city:'京都',country:'日本',airport:'關西國際機場',iata:'KIX',emoji:'🇯🇵',areas:['祇園','嵐山','清水寺','伏見','金閣寺','河原町','錦市場']},
-  {city:'沖繩',country:'日本',airport:'那霸機場',iata:'OKA',emoji:'🇯🇵',areas:['國際通','美浜','古宇利島','美麗海','首里','本部','恩納']},
-  {city:'札幌',country:'日本',airport:'新千歲機場',iata:'CTS',emoji:'🇯🇵',areas:['大通','薄野','圓山','北広島','小樽','時計台','狸小路']},
-  {city:'福岡',country:'日本',airport:'福岡機場',iata:'FUK',emoji:'🇯🇵',areas:['博多','天神','中洲','太宰府','糸島','小倉','大濠']},
-  {city:'名古屋',country:'日本',airport:'中部國際機場',iata:'NGO',emoji:'🇯🇵',areas:['榮','名駅','大須','覚王山','有松','伏見','金山']},
-  // 🇰🇷 韓國
-  {city:'首爾',country:'韓國',airport:'仁川國際機場',iata:'ICN',emoji:'🇰🇷',areas:['明洞','弘大','江南','梨泰院','北村','東大門','新村']},
-  {city:'釜山',country:'韓國',airport:'金海國際機場',iata:'PUS',emoji:'🇰🇷',areas:['海雲台','南浦洞','西面','廣安里','機張','太宗臺','松島']},
-  {city:'濟州島',country:'韓國',airport:'濟州國際機場',iata:'CJU',emoji:'🇰🇷',areas:['濟州市','西歸浦','城山','中文','翰林','牛島','漢拿山']},
-  // 🇹🇭 泰國
-  {city:'曼谷',country:'泰國',airport:'素萬那普機場',iata:'BKK',emoji:'🇹🇭',areas:['暹羅','考山路','素坤逸','湄南河','恰圖恰','芭提雅','是隆']},
-  {city:'清邁',country:'泰國',airport:'清邁國際機場',iata:'CNX',emoji:'🇹🇭',areas:['古城區','尼曼路','素帖山','湄林','清道','三王廟','夜市']},
-  {city:'普吉島',country:'泰國',airport:'普吉國際機場',iata:'HKT',emoji:'🇹🇭',areas:['芭東','卡倫','卡塔','奈漢','拉威','攀瓦','奈陽']},
-  // 🇸🇬 新加坡
-  {city:'新加坡',country:'新加坡',airport:'樟宜機場',iata:'SIN',emoji:'🇸🇬',areas:['濱海灣','牛車水','小印度','烏節路','聖淘沙','克拉碼頭','武吉知馬']},
-  // 🇻🇳 越南
-  {city:'胡志明市',country:'越南',airport:'新山一國際機場',iata:'SGN',emoji:'🇻🇳',areas:['第一郡','第三郡','濱城市場','富美興','第七郡','濱城','新平']},
-  {city:'河內',country:'越南',airport:'內排國際機場',iata:'HAN',emoji:'🇻🇳',areas:['還劍湖','西湖','老城區','巴亭','金馬郡','河東','天倫']},
-  {city:'峴港',country:'越南',airport:'峴港國際機場',iata:'DAD',emoji:'🇻🇳',areas:['美溪海灘','古城會安','山茶半島','峴港市區','巴拿山','關南','林同']},
-  // 🇲🇾 馬來西亞
-  {city:'吉隆坡',country:'馬來西亞',airport:'吉隆坡國際機場',iata:'KUL',emoji:'🇲🇾',areas:['武吉免登','KLCC','茨廠街','孟沙','蒲種','安邦','梳邦']},
-  // 🇦🇺 澳洲
-  {city:'雪梨',country:'澳洲',airport:'雪梨國際機場',iata:'SYD',emoji:'🇦🇺',areas:['市中心','達令港','邦代海灘','岩石區','曼利','帕拉馬塔','牛津街']},
-  {city:'墨爾本',country:'澳洲',airport:'墨爾本國際機場',iata:'MEL',emoji:'🇦🇺',areas:['市中心','聖科達','菲茨洛伊','普拉蘭','南岸','達克蘭','卡爾頓']},
-];
-
-// Group cities by country for popular panel
-const POPULAR_GROUPS = [
-  { country:'台灣', emoji:'🇹🇼', cities:['台北','台中','高雄','台南'] },
-  { country:'日本', emoji:'🇯🇵', cities:['東京','大阪','京都','沖繩','札幌','福岡','名古屋'] },
-  { country:'韓國', emoji:'🇰🇷', cities:['首爾','釜山','濟州島'] },
-  { country:'泰國', emoji:'🇹🇭', cities:['曼谷','清邁','普吉島'] },
-  { country:'新加坡', emoji:'🇸🇬', cities:['新加坡'] },
-  { country:'越南', emoji:'🇻🇳', cities:['胡志明市','河內','峴港'] },
-  { country:'馬來西亞', emoji:'🇲🇾', cities:['吉隆坡'] },
-  { country:'澳洲', emoji:'🇦🇺', cities:['雪梨','墨爾本'] },
-];
-
-// ══════════════════════════════════════
-// DESTINATION SEARCH (offline)
-// ══════════════════════════════════════
-let destSelected = null;
 let destSearchTimer = null;
+let destSelected = null; // { city, country, airport, iata, emoji }
 
 function onDestInput(val) {
-  hidePopularPanel();
+  const icon = $('destSearchIcon'), spinner = $('destSpinner');
   if (!val || val.length < 1) { hideDestDropdown(); return; }
+  icon.style.display = 'none'; spinner.style.display = 'block';
   clearTimeout(destSearchTimer);
-  destSearchTimer = setTimeout(() => searchDestLocal(val), 150);
+  // Debounce 500ms
+  destSearchTimer = setTimeout(() => searchDest(val), 500);
 }
 
-function searchDestLocal(query) {
-  const q = query.toLowerCase().trim();
-  const results = CITY_DB.filter(c =>
-    c.city.includes(query) ||
-    c.country.includes(query) ||
-    c.iata.toLowerCase().includes(q) ||
-    c.airport.includes(query) ||
-    c.city.toLowerCase().includes(q)
-  ).slice(0, 6);
-  showDestDropdown(results, query);
+async function searchDest(query) {
+  const spinner = $('destSpinner'), icon = $('destSearchIcon');
+  try {
+    const resp = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'destination', prompt: query })
+    });
+    const data = await resp.json();
+    const results = data.results || [];
+    showDestDropdown(results, query);
+  } catch(e) {
+    // Fallback: show manual input option
+    showDestDropdown([], query);
+  } finally {
+    spinner.style.display = 'none'; icon.style.display = 'block';
+  }
 }
 
 function showDestDropdown(results, query) {
   const dd = $('destDropdown');
   dd.innerHTML = '';
+  // Show API results
   results.forEach(r => {
     const div = document.createElement('div');
     div.className = 'dest-option';
-    div.innerHTML = `<span class="opt-flag">${r.emoji}</span>
-      <div><div class="opt-city">${r.city} · ${r.country}</div>
-      <div class="opt-sub">✈️ ${r.airport}（${r.iata}）</div></div>`;
-    div.onclick = () => selectDestCity(r);
+    div.innerHTML = `<span class="opt-flag">${r.emoji||'🌏'}</span>
+      <div><div class="opt-city">${r.city}・${r.country}</div>
+      <div class="opt-sub">✈️ ${r.airport}（${r.iata||''}）</div></div>`;
+    div.onclick = () => selectDestResult(r);
     dd.appendChild(div);
   });
-  // Manual input option if no results
-  if (results.length === 0) {
-    const manual = document.createElement('div');
-    manual.className = 'dest-option';
-    manual.innerHTML = `<span class="opt-flag">✏️</span>
-      <div><div class="opt-city">手動輸入「${query}」</div>
-      <div class="opt-sub">找不到城市，自行填寫</div></div>`;
-    manual.onclick = () => selectDestManual(query);
-    dd.appendChild(manual);
-  }
+  // Always show manual input option
+  const manual = document.createElement('div');
+  manual.className = 'dest-option';
+  manual.style.borderTop = results.length ? '1px dashed #FFE0C0' : '';
+  manual.innerHTML = `<span class="opt-flag">✏️</span>
+    <div><div class="opt-city">手動輸入「${query}」</div>
+    <div class="opt-sub">自行填寫機場等資訊</div></div>`;
+  manual.onclick = () => selectDestManual(query);
+  dd.appendChild(manual);
   dd.classList.add('show');
 }
 
-function hideDestDropdown() { $('destDropdown')?.classList.remove('show'); }
-
-// ══════════════════════════════════════
-// POPULAR PANEL (globe button)
-// ══════════════════════════════════════
-function togglePopularPanel() {
-  const panel = $('popularPanel');
-  const btn = $('destGlobeBtn');
-  if (panel.classList.contains('show')) {
-    hidePopularPanel();
-  } else {
-    buildPopularPanel();
-    panel.classList.add('show');
-    btn.classList.add('active');
-    hideDestDropdown();
-  }
-}
-
-function buildPopularPanel() {
-  const panel = $('popularPanel');
-  panel.innerHTML = '';
-  POPULAR_GROUPS.forEach(group => {
-    const header = document.createElement('div');
-    header.className = 'popular-country';
-    header.textContent = `${group.emoji} ${group.country}`;
-    panel.appendChild(header);
-    group.cities.forEach(cityName => {
-      const cityData = CITY_DB.find(c => c.city === cityName);
-      if (!cityData) return;
-      const div = document.createElement('div');
-      div.className = 'popular-city';
-      div.innerHTML = `<span class="pc-flag">${cityData.emoji}</span>
-        <div><div class="pc-name">${cityData.city}</div>
-        <div class="pc-airport">${cityData.airport}</div></div>`;
-      div.onclick = () => { selectDestCity(cityData); hidePopularPanel(); };
-      panel.appendChild(div);
-    });
-  });
-}
-
-function hidePopularPanel() {
-  $('popularPanel')?.classList.remove('show');
-  $('destGlobeBtn')?.classList.remove('active');
-}
-
-// Close panels when clicking outside
-document.addEventListener('click', e => {
-  if (!e.target.closest('#destSearchWrap')) {
-    hideDestDropdown();
-    hidePopularPanel();
-  }
-});
-
-// ══════════════════════════════════════
-// SELECT DESTINATION
-// ══════════════════════════════════════
-function selectDestCity(r) {
+function selectDestResult(r) {
   destSelected = r;
   currentDest = r.city;
-  currentAreas = r.areas || [];
+  currentAreas = DEST_DATA[r.city]?.areas || [r.city];
   $('destSearchInput').value = '';
-  $('destBadgeText').textContent = `${r.emoji} ${r.city} · ${r.country} · ${r.airport}`;
+  $('destBadgeText').textContent = `${r.emoji||'🌏'} ${r.city}・${r.country}・${r.airport}`;
   $('destBadge').classList.add('show');
   $('customDest').classList.remove('show');
-  hideDestDropdown(); hidePopularPanel();
-  updateAllHotelChips();
+  hideDestDropdown();
+  updateHotelChips();
   rebuildDayRows();
   saveState();
 }
 
 function selectDestManual(query) {
-  currentDest = 'custom'; currentAreas = [];
+  currentDest = 'custom';
+  currentAreas = [];
   $('destSearchInput').value = query;
   $('customDest').classList.add('show');
-  if ($('customCity')) $('customCity').value = query;
+  if($('customCity')) $('customCity').value = query;
   $('destBadge').classList.remove('show');
   hideDestDropdown();
-  updateAllHotelChips();
+  updateHotelChips();
   rebuildDayRows();
   saveState();
 }
@@ -613,13 +498,15 @@ function clearDest() {
   $('destSearchInput').value = '';
   $('destBadge').classList.remove('show');
   $('customDest').classList.remove('show');
-  hideDestDropdown(); hidePopularPanel();
+  hideDestDropdown();
 }
 
-function updateAllHotelChips() {
-  document.querySelectorAll('[data-hchips]').forEach(el => renderHotelAreaChips(el, el.dataset.hchips));
+function hideDestDropdown() { $('destDropdown')?.classList.remove('show'); }
+
+function updateHotelChips() {
+  document.querySelectorAll('[data-hchips]').forEach(el => fillChips(el, el.dataset.hchips));
 }
-function selectDest(btn) {} // legacy
+function selectDest(btn) {} // legacy alias
 
 // ══════════════════════════════════════
 // 3. FLIGHT AUTOFILL
@@ -774,9 +661,9 @@ function addHotel(name='',area='',checkin='',checkout=''){
     </div>
     <div class="hotel-entry-fields">
       <div class="full form-group"><label>🏨 飯店名稱</label><input type="text" id="hn_${id}" value="${name}" placeholder="例：海雲台格蘭德飯店"></div>
-      <div class="full form-group"><label>📍 住宿區域（點選或手動輸入）</label>
-        <input type="text" id="ha_${id}" value="${aval}" placeholder="輸入或點選下方區域按鈕">
-        <div class="hotel-area-chips" id="hc_${id}" data-hchips="${id}"></div>
+      <div class="full form-group"><label>📍 住宿區域</label>
+        <input type="text" id="ha_${id}" value="${aval}" placeholder="例：海雲台">
+        <div class="area-chips" id="hc_${id}" data-hchips="${id}"></div>
       </div>
       <div class="form-group"><label>📅 入住</label><input type="date" id="hi_${id}" value="${ci}"></div>
       <div class="form-group"><label>📅 退房</label><input type="date" id="ho_${id}" value="${co}"></div>
@@ -786,93 +673,52 @@ function addHotel(name='',area='',checkin='',checkout=''){
     </button>
     <div id="hotelRecs_${id}" class="hotel-recs"></div>`;
   $('hotelList').appendChild(entry);
-  renderHotelAreaChips($(`hc_${id}`), id);
+  fillChips($(`hc_${id}`), id);
 }
 
-function fillChips(el, hid){ renderHotelAreaChips(el, hid); }
-
-function renderHotelAreaChips(el, hid) {
-  if (!el) return;
-  el.innerHTML = '';
-  const areas = currentAreas.length > 0 ? currentAreas : [];
-  if (areas.length === 0) {
-    el.innerHTML = '<span style="font-size:11px;color:#A08060;font-family:Nunito,sans-serif;">選擇目的地後顯示區域按鈕</span>';
-    return;
-  }
-  areas.forEach(a => {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'hotel-area-chip';
-    chip.textContent = a;
-    chip.onclick = () => {
-      if ($(`ha_${hid}`)) $(`ha_${hid}`).value = a;
-      el.querySelectorAll('.hotel-area-chip').forEach(c => c.classList.remove('selected'));
-      chip.classList.add('selected');
-    };
-    if ($(`ha_${hid}`)?.value === a) chip.classList.add('selected');
-    el.appendChild(chip);
+function fillChips(el, hid){
+  if(!el)return; el.innerHTML='';
+  currentAreas.forEach(a=>{
+    const c=document.createElement('button');
+    c.type='button'; c.className='achip'; c.textContent=a;
+    c.onclick=()=>$(`ha_${hid}`).value=a;
+    el.appendChild(c);
   });
 }
 
-// ── Built-in Hotel Database ──
-const HOTEL_DB = {
-  '台北':[{name:'台北文華東方酒店',stars:5,price:'NT$12,000+/晚',note:'信義商圈，頂級奢華'},{name:'台北君悅酒店',stars:5,price:'NT$8,000+/晚',note:'信義區地標，景觀絕佳'},{name:'台北喜來登大飯店',stars:5,price:'NT$6,000+/晚',note:'忠孝復興站旁'},{name:'台北晶華酒店',stars:5,price:'NT$7,000+/晚',note:'中山站，購物方便'},{name:'台北美麗信花園酒店',stars:4,price:'NT$3,500+/晚',note:'中山區，近士林夜市'}],
-  '台中':[{name:'台中日月千禧酒店',stars:5,price:'NT$5,000+/晚',note:'勤美綠園道旁'},{name:'台中林酒店',stars:5,price:'NT$6,000+/晚',note:'設計感強，網美必訪'},{name:'台中金典酒店',stars:5,price:'NT$4,500+/晚',note:'台中市中心地標'},{name:'逢甲英迪格酒店',stars:4,price:'NT$3,000+/晚',note:'逢甲夜市步行可達'},{name:'台中亞緻大飯店',stars:4,price:'NT$3,500+/晚',note:'市政府特區'}],
-  '高雄':[{name:'高雄漢來大飯店',stars:5,price:'NT$4,500+/晚',note:'新興區，近六合夜市'},{name:'高雄君鴻國際酒店',stars:5,price:'NT$5,000+/晚',note:'85大樓，全市最高'},{name:'高雄寒軒國際大飯店',stars:5,price:'NT$3,500+/晚',note:'中央公園站旁'},{name:'高雄福容大飯店',stars:4,price:'NT$2,500+/晚',note:'近高雄車站'},{name:'高雄義大天悅飯店',stars:5,price:'NT$4,000+/晚',note:'義大世界旁'}],
-  '台南':[{name:'台南晶英酒店',stars:5,price:'NT$4,000+/晚',note:'文化中心旁，設計感強'},{name:'台南大億麗緻酒店',stars:5,price:'NT$3,500+/晚',note:'中西區古蹟旁'},{name:'台南和逸飯店',stars:4,price:'NT$2,500+/晚',note:'民族路，近中正路'},{name:'雅樂軒台南',stars:4,price:'NT$3,000+/晚',note:'近安平老街'},{name:'台南THE Place',stars:3,price:'NT$1,800+/晚',note:'背包客熱門選擇'}],
-  '東京':[{name:'東京文華東方酒店',stars:5,price:'NT$15,000+/晚',note:'日本橋，頂級奢華'},{name:'新宿格蘭德大飯店',stars:4,price:'NT$5,000+/晚',note:'新宿站旁，交通便利'},{name:'淺草東武飯店',stars:4,price:'NT$4,000+/晚',note:'傳統下町，近雷門'},{name:'澀谷Excel Hotel東急',stars:4,price:'NT$4,500+/晚',note:'澀谷站直結'},{name:'池袋Sunshine City Prince',stars:4,price:'NT$3,500+/晚',note:'池袋購物天堂'}],
-  '大阪':[{name:'大阪麗思卡爾頓',stars:5,price:'NT$10,000+/晚',note:'梅田高樓，360度視野'},{name:'難波聖卡酒店',stars:4,price:'NT$4,000+/晚',note:'道頓堀步行3分鐘'},{name:'梅田希爾頓大阪',stars:5,price:'NT$7,000+/晚',note:'梅田站直結'},{name:'心齋橋東橫Inn',stars:3,price:'NT$1,500+/晚',note:'超值，購物街旁'},{name:'難波華盛頓廣場',stars:3,price:'NT$2,000+/晚',note:'難波鬧區'}],
-  '京都':[{name:'京都四季酒店',stars:5,price:'NT$20,000+/晚',note:'禪意庭園，奢華體驗'},{name:'祇園八坂飯店',stars:4,price:'NT$6,000+/晚',note:'花見小路旁'},{name:'嵐山峽谷旅館',stars:4,price:'NT$7,000+/晚',note:'竹林旁日式旅館'},{name:'京都車站飯店',stars:4,price:'NT$4,000+/晚',note:'車站直結，觀光便利'},{name:'金閣旁町家民宿',stars:3,price:'NT$2,500+/晚',note:'傳統町家，在地體驗'}],
-  '沖繩':[{name:'沖繩萬豪渡假村',stars:5,price:'NT$9,000+/晚',note:'水族館旁，無邊際泳池'},{name:'國際通Daiwa Roynet',stars:3,price:'NT$2,000+/晚',note:'購物街正中心'},{name:'古宇利島海景別墅',stars:4,price:'NT$6,000+/晚',note:'私人沙灘，夢幻離島'},{name:'Sheraton沖繩',stars:5,price:'NT$7,000+/晚',note:'恩納海灘第一排'},{name:'首里城附近民宿',stars:3,price:'NT$1,500+/晚',note:'文化氣息，安靜舒適'}],
-  '札幌':[{name:'札幌JR塔酒店日航',stars:5,price:'NT$5,000+/晚',note:'JR札幌站直結，視野佳'},{name:'札幌王子大飯店',stars:4,price:'NT$3,500+/晚',note:'大通公園旁'},{name:'薄野Dormy Inn',stars:3,price:'NT$2,000+/晚',note:'溫泉浴，性價比高'},{name:'APA Hotel薄野',stars:3,price:'NT$1,800+/晚',note:'薄野鬧區中心'},{name:'Moxy by Marriott',stars:4,price:'NT$3,000+/晚',note:'設計感，近狸小路'}],
-  '福岡':[{name:'福岡洲際酒店',stars:5,price:'NT$5,000+/晚',note:'博多港旁，海景迷人'},{name:'博多全日空皇冠廣場',stars:5,price:'NT$4,500+/晚',note:'博多站旁'},{name:'天神Dormy Inn',stars:3,price:'NT$2,000+/晚',note:'天神商圈中心'},{name:'Canal City Washington',stars:3,price:'NT$2,500+/晚',note:'運河城購物中心旁'},{name:'博多Excel Hotel東急',stars:4,price:'NT$3,500+/晚',note:'博多站步行5分'}],
-  '名古屋':[{name:'名古屋萬豪酒店',stars:5,price:'NT$6,000+/晚',note:'名駅旁，商務首選'},{name:'名古屋希爾頓',stars:5,price:'NT$5,000+/晚',note:'榮區，繁華地帶'},{name:'Dormy Inn名古屋',stars:3,price:'NT$2,000+/晚',note:'溫泉浴，物超所值'},{name:'名古屋JR Gate Tower',stars:5,price:'NT$5,500+/晚',note:'名古屋站直結'},{name:'Vessel Inn名駅',stars:3,price:'NT$1,800+/晚',note:'交通方便，超值'}],
-  '首爾':[{name:'樂天飯店首爾',stars:5,price:'NT$8,000+/晚',note:'明洞核心，購物方便'},{name:'首爾廣場飯店',stars:5,price:'NT$7,000+/晚',note:'市政廳旁，景觀套房'},{name:'弘大哥倫布飯店',stars:3,price:'NT$2,000+/晚',note:'弘大夜市，年輕氣息'},{name:'江南W飯店',stars:5,price:'NT$9,000+/晚',note:'時尚設計，COEX旁'},{name:'梨泰院GLAD飯店',stars:4,price:'NT$3,500+/晚',note:'多元文化區'}],
-  '釜山':[{name:'海雲台格蘭德飯店',stars:5,price:'NT$5,000+/晚',note:'直面海雲台海灘'},{name:'派拉蒙飯店釜山',stars:4,price:'NT$3,000+/晚',note:'近地鐵，步行至海灘'},{name:'釜山諾富特大使',stars:5,price:'NT$5,500+/晚',note:'五星設施，含泳池'},{name:'南浦洞Hotel1',stars:3,price:'NT$1,500+/晚',note:'近BIFF廣場'},{name:'廣安里海景民宿',stars:4,price:'NT$2,500+/晚',note:'廣安大橋夜景第一排'}],
-  '濟州島':[{name:'濟州新羅飯店',stars:5,price:'NT$7,000+/晚',note:'中文觀光區，頂級設施'},{name:'Lotte City濟州',stars:4,price:'NT$3,500+/晚',note:'濟州市中心'},{name:'濟州海燕飯店',stars:4,price:'NT$3,000+/晚',note:'城山日出峰旁'},{name:'中文海景民宿',stars:3,price:'NT$2,000+/晚',note:'中文度假區'},{name:'翰林公園旁旅館',stars:3,price:'NT$1,800+/晚',note:'翰林港附近'}],
-  '曼谷':[{name:'曼谷文華東方',stars:5,price:'NT$12,000+/晚',note:'百年奢華，湄南河畔'},{name:'暹羅凱悅',stars:5,price:'NT$7,000+/晚',note:'BTS站直結'},{name:'素坤逸希爾頓',stars:5,price:'NT$6,000+/晚',note:'素坤逸繁華地帶'},{name:'考山路青旅',stars:2,price:'NT$500+/晚',note:'背包客天堂'},{name:'芭提雅希爾頓',stars:5,price:'NT$5,500+/晚',note:'芭提雅海灘第一排'}],
-  '清邁':[{name:'137 Pillars House',stars:5,price:'NT$8,000+/晚',note:'殖民地風格，頂級體驗'},{name:'尼曼路精品旅館',stars:4,price:'NT$2,500+/晚',note:'咖啡館文青聚集地'},{name:'古城區民宿',stars:3,price:'NT$1,200+/晚',note:'傳統蘭納風情'},{name:'素帖山景觀飯店',stars:4,price:'NT$3,000+/晚',note:'山景絕佳，清幽寧靜'},{name:'清邁Anantara',stars:5,price:'NT$7,000+/晚',note:'湄平河畔，奢華渡假'}],
-  '普吉島':[{name:'普吉島安縵達里',stars:5,price:'NT$18,000+/晚',note:'頂級私人泳池別墅'},{name:'芭東海灘假日酒店',stars:4,price:'NT$4,000+/晚',note:'芭東海灘旁，熱鬧'},{name:'卡塔海灘Centara',stars:4,price:'NT$3,500+/晚',note:'卡塔寧靜海灘'},{name:'奈漢海灘民宿',stars:3,price:'NT$1,500+/晚',note:'南部寧靜，當地氣氛'},{name:'攀瓦海景Villa',stars:5,price:'NT$8,000+/晚',note:'懸崖上絕景海景'}],
-  '新加坡':[{name:'濱海灣金沙酒店',stars:5,price:'NT$13,000+/晚',note:'空中泳池，新加坡地標'},{name:'萊佛士酒店',stars:5,price:'NT$18,000+/晚',note:'百年歷史傳奇'},{name:'聖淘沙硬石飯店',stars:4,price:'NT$5,500+/晚',note:'環球影城旁'},{name:'烏節路希爾頓',stars:5,price:'NT$7,000+/晚',note:'購物大街核心'},{name:'牛車水精品旅館',stars:3,price:'NT$2,000+/晚',note:'傳統華人街區'}],
-  '胡志明市':[{name:'西貢洲際酒店',stars:5,price:'NT$4,000+/晚',note:'第一郡中心，殖民風'},{name:'Park Hyatt西貢',stars:5,price:'NT$6,000+/晚',note:'歌劇院廣場旁'},{name:'富美興Sunrise City',stars:4,price:'NT$2,500+/晚',note:'南部新區，購物方便'},{name:'濱城市場旁民宿',stars:3,price:'NT$800+/晚',note:'背包客集中區'},{name:'第七郡服務式公寓',stars:3,price:'NT$1,200+/晚',note:'韓國人聚集，韓食豐富'}],
-  '河內':[{name:'河內大都會飯店',stars:5,price:'NT$4,500+/晚',note:'還劍湖旁，法式殖民'},{name:'索菲特傳奇大都會',stars:5,price:'NT$5,500+/晚',note:'百年法式建築'},{name:'西湖Sheraton',stars:5,price:'NT$3,500+/晚',note:'西湖畔，湖景迷人'},{name:'老城區精品旅館',stars:3,price:'NT$800+/晚',note:'傳統36街坊，熱鬧'},{name:'巴亭精品飯店',stars:4,price:'NT$2,000+/晚',note:'主席府旁，文化區'}],
-  '峴港':[{name:'峴港洲際陽光半島',stars:5,price:'NT$6,000+/晚',note:'私人沙灘，頂級渡假'},{name:'美溪海灘Fusion Maia',stars:5,price:'NT$8,000+/晚',note:'含SPA，all-inclusive'},{name:'會安Anantara',stars:5,price:'NT$5,000+/晚',note:'會安古城旁河景'},{name:'峴港市區民宿',stars:3,price:'NT$800+/晚',note:'交通方便，自由行'},{name:'巴拿山旁渡假村',stars:4,price:'NT$3,000+/晚',note:'纜車景觀，涼爽氣候'}],
-  '吉隆坡':[{name:'吉隆坡四季',stars:5,price:'NT$8,000+/晚',note:'KLCC雙塔旁，頂奢'},{name:'馬來西亞香格里拉',stars:5,price:'NT$5,000+/晚',note:'武吉免登，繁華地帶'},{name:'Traders Hotel KLCC',stars:5,price:'NT$4,500+/晚',note:'雙塔最佳視角'},{name:'茨廠街精品旅館',stars:3,price:'NT$800+/晚',note:'唐人街，文化體驗'},{name:'孟沙購物中心旁',stars:4,price:'NT$2,500+/晚',note:'高級住宅區，安靜'}],
-  '雪梨':[{name:'雪梨四季酒店',stars:5,price:'NT$10,000+/晚',note:'市中心，岩石區旁'},{name:'The Langham雪梨',stars:5,price:'NT$9,000+/晚',note:'達令港，水療設施'},{name:'邦代海灘民宿',stars:3,price:'NT$2,500+/晚',note:'衝浪勝地，海灘步行'},{name:'岩石區精品飯店',stars:4,price:'NT$5,000+/晚',note:'歷史街區，橋景'},{name:'Moxy雪梨機場',stars:3,price:'NT$2,000+/晚',note:'轉機首選，近機場'}],
-  '墨爾本':[{name:'墨爾本Crown塔酒店',stars:5,price:'NT$8,000+/晚',note:'賭場旁，亞拉河景'},{name:'The Langham墨爾本',stars:5,price:'NT$7,000+/晚',note:'南岸，河畔奢華'},{name:'聖科達海灘旅館',stars:3,price:'NT$2,000+/晚',note:'海灘步行，夜生活'},{name:'菲茨洛伊文青旅館',stars:3,price:'NT$1,800+/晚',note:'咖啡文化聚集地'},{name:'市中心Adelphi Hotel',stars:4,price:'NT$4,000+/晚',note:'設計感，購物街旁'}],
-};
-
-function recommendHotels(hid) {
-  const btn = $(`recBtn_${hid}`);
-  const recs = $(`hotelRecs_${hid}`);
-  const dest = getDestName();
-  const area = ($(`ha_${hid}`)?.value || '').trim();
-  btn.disabled = true; btn.textContent = '🔍 搜尋中…';
-  recs.innerHTML = '';
-  setTimeout(() => {
-    let hotels = HOTEL_DB[dest] || [];
-    if (hotels.length === 0) {
-      recs.innerHTML = `<div style="font-size:12px;color:#A08060;padding:8px;font-family:Nunito,sans-serif;">暫無「${dest}」的推薦資料，請手動輸入飯店名稱</div>`;
-    } else {
-      hotels.forEach(h => {
-        const stars = '⭐'.repeat(h.stars);
-        const card = document.createElement('div');
-        card.className = 'hotel-rec-card';
-        const safeName = (h.name||'').replace(/'/g,"\'");
-        card.innerHTML = `
-          <div style="flex:1">
-            <div class="rec-star">${stars}</div>
-            <div class="rec-name">${h.name}</div>
-            <div class="rec-area">📍 ${dest}${area?' · '+area:''}</div>
-            <div style="font-size:11px;color:#7A8090;margin-top:2px;">${h.note||''}</div>
-            <div class="rec-price">${h.price||''}</div>
-          </div>
-          <button class="use-rec-btn" onclick="useHotelRec('${safeName}','${area||dest}',${hid})">使用</button>`;
-        recs.appendChild(card);
-      });
-    }
-    btn.disabled=false; btn.textContent='🏨 推薦飯店';
-  }, 300);
+async function recommendHotels(hid){
+  const btn=$(`recBtn_${hid}`);
+  const recs=$(`hotelRecs_${hid}`);
+  const dest=getDestName();
+  const area=($(`ha_${hid}`)?.value||dest).trim();
+  btn.disabled=true; btn.textContent='⏳ 搜尋中…';
+  recs.innerHTML='<div style="font-size:12px;color:#A08060;padding:6px;">Gemini 正在搜尋推薦飯店…</div>';
+  try{
+    const prompt=`請推薦${dest}${area}地區3-5間評價優良的飯店（使用Google搜尋最新資料）。只回傳JSON陣列，每筆包含：name（飯店名稱）、area（區域）、stars（1-5數字）、priceRange（價格範圍，如 NT$2000-3500/晚）、highlight（一句特色，繁體中文20字內）。只輸出JSON陣列，不要其他文字。`;
+    const text = await callGemini(prompt, 'hotel');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const hotels = JSON.parse(clean);
+    recs.innerHTML='';
+    hotels.forEach(h=>{
+      const stars='⭐'.repeat(Math.min(Math.round(h.stars||4),5));
+      const card=document.createElement('div');
+      card.className='hotel-rec-card';
+      const safeName=(h.name||'').replace(/'/g,"\'");
+      card.innerHTML=`
+        <div style="flex:1">
+          <div class="rec-star">${stars}</div>
+          <div class="rec-name">${h.name||''}</div>
+          <div class="rec-area">📍 ${h.area||area}</div>
+          <div style="font-size:11px;color:#7A8090;margin-top:2px;">${h.highlight||''}</div>
+          <div class="rec-price">${h.priceRange||''}</div>
+        </div>
+        <button class="use-rec-btn" onclick="useHotelRec('${safeName}','${h.area||area}',${hid})">使用</button>`;
+      recs.appendChild(card);
+    });
+  }catch(e){
+    recs.innerHTML=`<div style="font-size:12px;color:#E05040;padding:6px;">搜尋失敗：${e.message}</div>`;
+  }
+  btn.disabled=false; btn.textContent='🏨 推薦飯店';
 }
 
 function useHotelRec(name,area,hid){
