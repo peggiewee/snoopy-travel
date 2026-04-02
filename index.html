@@ -300,7 +300,7 @@ input:focus,select:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,14
 
   <!-- AI ITINERARY -->
   <div class="section-div">🤖 AI 智能行程規劃</div>
-  <button class="ai-gen-btn" id="aiBtn" onclick="generateAIItinerary()">✨ 用 AI 自動生成行程</button>
+  <button class="ai-gen-btn" id="aiBtn" onclick="generateAIItinerary()">✨ 智能生成行程</button>
   <div class="ai-status" id="aiStatus"></div>
 
   <!-- DAY ROWS -->
@@ -954,29 +954,236 @@ function updateBadge(){
 // ══════════════════════════════════════
 // 5. AI ITINERARY via Gemini Backend
 // ══════════════════════════════════════
+
+// ══════════════════════════════════════
+// ITINERARY TEMPLATE LIBRARY
+// 可組合積木式模板，完全不耗 API
+// ══════════════════════════════════════
+
+// 快取設定
+const ITINERARY_CACHE_PREFIX = 'snoopy_itin_';
+const CACHE_EXPIRE_DAYS = 30;
+
+function getCachedItinerary(key) {
+  try {
+    const raw = localStorage.getItem(ITINERARY_CACHE_PREFIX + key);
+    if (!raw) return null;
+    const { data, expires } = JSON.parse(raw);
+    if (Date.now() > expires) { localStorage.removeItem(ITINERARY_CACHE_PREFIX + key); return null; }
+    return data;
+  } catch(e) { return null; }
+}
+
+function setCachedItinerary(key, data) {
+  try {
+    const expires = Date.now() + CACHE_EXPIRE_DAYS * 86400000;
+    // 清理過期快取
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(ITINERARY_CACHE_PREFIX)) {
+        try { const v = JSON.parse(localStorage.getItem(k)); if (Date.now() > v.expires) localStorage.removeItem(k); } catch(e) {}
+      }
+    }
+    localStorage.setItem(ITINERARY_CACHE_PREFIX + key, JSON.stringify({ data, expires }));
+  } catch(e) {}
+}
+
+// 城市中間天模板積木 (3套主題 × N城市)
+const CITY_TEMPLATES = {
+  '台北': [
+    [{t:'08:30',txt:'🍳 永和豆漿早餐'},{t:'09:30',txt:'🏯 中正紀念堂 ＆ 自由廣場'},{t:'12:00',txt:'🍜 鼎泰豐小籠包午餐'},{t:'14:00',txt:'🛍️ 西門町逛街'},{t:'17:00',txt:'🌿 大安森林公園散步'},{t:'19:00',txt:'🌃 饒河夜市'}],
+    [{t:'08:00',txt:'🌅 象山步道晨走（101景觀）'},{t:'10:00',txt:'🎨 松山文創園區'},{t:'12:30',txt:'🍱 信義區午餐'},{t:'14:00',txt:'🏬 信義百貨購物'},{t:'17:30',txt:'🌆 101觀景台夕陽'},{t:'19:30',txt:'🥩 信義區燒肉'}],
+    [{t:'08:30',txt:'🍵 師大夜市早午餐'},{t:'10:00',txt:'🏛️ 國立故宮博物院'},{t:'13:00',txt:'🍚 士林官邸附近午餐'},{t:'15:00',txt:'🎡 士林夜市（提早入場）'},{t:'18:00',txt:'🛍️ 天母購物街'},{t:'20:00',txt:'🌙 河濱公園夜騎'}],
+  ],
+  '台中': [
+    [{t:'08:30',txt:'🍳 宮原眼科早午餐'},{t:'10:00',txt:'🎨 彩虹村 ＆ 草悟道'},{t:'12:00',txt:'🍜 第二市場午餐'},{t:'14:00',txt:'🏛️ 國立自然科學博物館'},{t:'16:30',txt:'☕ 勤美誠品下午茶'},{t:'19:00',txt:'🌃 逢甲夜市'}],
+    [{t:'08:00',txt:'🌿 大坑步道晨走'},{t:'10:30',txt:'🎋 東海大學 ＆ 路思義教堂'},{t:'12:30',txt:'🍱 東海商圈午餐'},{t:'14:00',txt:'🛍️ 三民路老街'},{t:'16:00',txt:'🏯 台中州廳'},{t:'19:00',txt:'🍺 審計新村文青市集'}],
+    [{t:'09:00',txt:'🍵 春水堂珍奶發源地'},{t:'10:30',txt:'🎨 台中國家歌劇院'},{t:'12:30',txt:'🍜 精明一街午餐'},{t:'14:30',txt:'🏬 中友百貨購物'},{t:'17:00',txt:'🌅 高美濕地夕陽'},{t:'19:30',txt:'🌃 一中街夜市'}],
+  ],
+  '高雄': [
+    [{t:'08:30',txt:'🍳 鹽埕早餐'},{t:'09:30',txt:'⛴️ 旗津渡輪 ＆ 貝殼館'},{t:'12:00',txt:'🦞 旗津海鮮午餐'},{t:'14:00',txt:'🎨 駁二藝術特區'},{t:'17:00',txt:'🌅 西子灣夕陽'},{t:'19:30',txt:'🌃 六合夜市'}],
+    [{t:'08:00',txt:'🌿 壽山登山步道'},{t:'10:30',txt:'🏯 打狗英國領事館'},{t:'12:30',txt:'🍜 三鳳中街午餐'},{t:'14:00',txt:'🛍️ 新崛江商圈'},{t:'17:00',txt:'🎡 愛河搭船遊河'},{t:'19:30',txt:'🍺 瑞豐夜市'}],
+    [{t:'09:00',txt:'🐠 高雄海洋博物館'},{t:'11:30',txt:'🌉 跨港纜車'},{t:'13:00',txt:'🍱 左營蓮池潭午餐'},{t:'14:30',txt:'⛩️ 蓮池潭龍虎塔'},{t:'17:00',txt:'🌆 85大樓觀景台'},{t:'19:30',txt:'🌃 光華夜市'}],
+  ],
+  '台南': [
+    [{t:'08:00',txt:'🍳 擔仔麵早餐'},{t:'09:30',txt:'🏯 赤崁樓 ＆ 孔廟'},{t:'12:00',txt:'🍜 安平豆花午餐'},{t:'14:00',txt:'⛵ 安平古堡'},{t:'16:30',txt:'🛍️ 神農街文青散步'},{t:'19:00',txt:'🌃 花園夜市'}],
+    [{t:'08:30',txt:'🍵 林百貨早午餐'},{t:'10:00',txt:'🎨 台南美術館'},{t:'12:30',txt:'🍱 中西區老街午餐'},{t:'14:00',txt:'⛩️ 祀典武廟'},{t:'16:00',txt:'🌅 鹿耳門天后宮'},{t:'19:00',txt:'🍺 大東夜市'}],
+    [{t:'08:00',txt:'🌿 四草綠色隧道'},{t:'11:00',txt:'🦅 七股鹽山'},{t:'13:00',txt:'🦐 七股海鮮午餐'},{t:'15:00',txt:'🐦 黑面琵鷺保護區'},{t:'17:30',txt:'🌅 漁光島夕陽'},{t:'19:30',txt:'🌃 小北觀光夜市'}],
+  ],
+  '東京': [
+    [{t:'08:00',txt:'🍵 築地市場早餐'},{t:'10:00',txt:'⛩️ 淺草寺 ＆ 仲見世通'},{t:'13:00',txt:'🍣 壽司午餐'},{t:'15:00',txt:'🗼 東京鐵塔'},{t:'18:00',txt:'🌆 六本木夜景'},{t:'20:00',txt:'🍜 新宿拉麵'}],
+    [{t:'07:30',txt:'🌸 代代木公園晨走'},{t:'09:30',txt:'👘 原宿竹下通'},{t:'12:00',txt:'🍛 澀谷午餐'},{t:'14:00',txt:'🎮 秋葉原電器街'},{t:'17:00',txt:'🌃 新宿夜景'},{t:'19:30',txt:'🍺 居酒屋'}],
+    [{t:'08:00',txt:'🏛️ 上野公園 ＆ 博物館'},{t:'11:00',txt:'📚 神保町古書街'},{t:'13:00',txt:'🍱 神田午餐'},{t:'15:00',txt:'🌿 皇居東御苑'},{t:'17:30',txt:'🛍️ 銀座購物'},{t:'20:00',txt:'🌙 汐留夜景'}],
+  ],
+  '大阪': [
+    [{t:'08:00',txt:'🐙 難波章魚燒早餐'},{t:'09:30',txt:'🏯 大阪城公園'},{t:'12:00',txt:'🍜 黑門市場午餐'},{t:'14:00',txt:'🛍️ 心齋橋掃貨'},{t:'17:00',txt:'⚡ 電電城'},{t:'19:30',txt:'🦞 道頓堀海鮮'}],
+    [{t:'08:30',txt:'🍳 梅田早餐'},{t:'10:00',txt:'🎡 天保山摩天輪'},{t:'12:00',txt:'🐠 海遊館水族館'},{t:'14:30',txt:'🦁 天王寺動物園'},{t:'17:00',txt:'🗼 通天閣'},{t:'19:30',txt:'🍢 新世界串炸'}],
+    [{t:'07:30',txt:'🌸 前往奈良（JR）'},{t:'09:00',txt:'🦌 奈良公園餵鹿'},{t:'11:00',txt:'⛩️ 東大寺'},{t:'13:00',txt:'🍵 奈良町午餐'},{t:'15:30',txt:'🚃 返回大阪'},{t:'19:00',txt:'🍺 梅田居酒屋'}],
+  ],
+  '京都': [
+    [{t:'06:30',txt:'🌅 伏見稻荷早晨參拜（千本鳥居）'},{t:'09:00',txt:'🍵 宇治抹茶體驗'},{t:'12:00',txt:'🍱 錦市場午餐'},{t:'14:00',txt:'🏯 二條城'},{t:'17:00',txt:'🌸 祇園花見小路'},{t:'19:30',txt:'🌙 先斗町晚餐'}],
+    [{t:'07:00',txt:'🌿 嵐山竹林（早晨無人）'},{t:'09:00',txt:'⛩️ 天龍寺庭園'},{t:'11:30',txt:'🍜 嵐山湯豆腐'},{t:'14:00',txt:'🚤 保津川遊船'},{t:'17:30',txt:'🛍️ 四條河原町'},{t:'20:00',txt:'🌃 木屋町夜遊'}],
+    [{t:'07:00',txt:'🌸 金閣寺晨訪'},{t:'09:00',txt:'🎨 龍安寺石庭'},{t:'11:30',txt:'🍣 北山午餐'},{t:'14:00',txt:'🌿 哲學之道漫步'},{t:'16:00',txt:'⛩️ 南禪寺'},{t:'19:00',txt:'🍶 先斗町晚餐'}],
+  ],
+  '沖繩': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🐠 萬座毛海蝕洞'},{t:'12:00',txt:'🦞 海鮮丼'},{t:'14:00',txt:'🐟 美麗海水族館'},{t:'17:00',txt:'🌅 本部町夕陽'},{t:'19:30',txt:'🍺 海鮮燒烤'}],
+    [{t:'07:30',txt:'🚤 出發古宇利島'},{t:'09:00',txt:'💙 古宇利大橋 ＆ 心形石'},{t:'12:00',txt:'🐚 島上海鮮午餐'},{t:'14:30',txt:'🏖️ 古宇利沙灘'},{t:'17:00',txt:'🌊 沙灘看夕陽'},{t:'19:30',txt:'🌃 國際通夜市'}],
+    [{t:'08:00',txt:'🤿 浮潛課程出發'},{t:'11:00',txt:'🐠 珊瑚礁探索'},{t:'13:00',txt:'🦐 海鮮炒飯'},{t:'15:00',txt:'🏯 首里城'},{t:'17:30',txt:'🛍️ 牧志公設市場'},{t:'19:30',txt:'🌺 BBQ晚餐'}],
+  ],
+  '札幌': [
+    [{t:'08:00',txt:'🍳 早餐'},{t:'09:30',txt:'🌿 大通公園散步'},{t:'11:00',txt:'🏛️ 北海道廳舊本廳舍'},{t:'13:00',txt:'🦀 二條市場海鮮午餐'},{t:'15:00',txt:'🐄 北海道神宮'},{t:'19:00',txt:'🌃 薄野夜生活'}],
+    [{t:'08:00',txt:'🚃 前往小樽（JR）'},{t:'09:30',txt:'⛵ 小樽運河散步'},{t:'11:00',txt:'🎵 音樂盒堂'},{t:'13:00',txt:'🦞 小樽壽司午餐'},{t:'16:00',txt:'🚃 返回札幌'},{t:'19:30',txt:'🍺 狸小路居酒屋'}],
+    [{t:'07:30',txt:'🎿 前往滑雪場'},{t:'10:00',txt:'⛷️ 滑雪體驗'},{t:'13:00',txt:'🍲 山莊午餐'},{t:'15:30',txt:'♨️ 溫泉泡湯'},{t:'18:00',txt:'🚃 返回市區'},{t:'20:00',txt:'🌃 薄野拉麵'}],
+  ],
+  '福岡': [
+    [{t:'08:00',txt:'🍳 早餐'},{t:'09:30',txt:'⛩️ 太宰府天滿宮'},{t:'12:00',txt:'🍜 博多拉麵午餐'},{t:'14:00',txt:'🛍️ 天神商圈'},{t:'17:00',txt:'🌊 福岡塔夕景'},{t:'19:30',txt:'🌃 中洲屋台夜市'}],
+    [{t:'08:30',txt:'🐟 長濱鮮魚市場早餐'},{t:'10:00',txt:'🏯 福岡城跡 ＆ 舞鶴公園'},{t:'12:30',txt:'🥩 博多和牛午餐'},{t:'14:30',txt:'🎨 福岡市美術館'},{t:'17:00',txt:'⛵ 糸島海岸'},{t:'20:00',txt:'🍺 天神居酒屋'}],
+    [{t:'08:00',txt:'🚃 前往門司港'},{t:'09:30',txt:'⛴️ 門司港懷舊地區'},{t:'12:00',txt:'🍌 バナナのたたき午餐'},{t:'14:00',txt:'🔭 和布刈公園展望台'},{t:'17:00',txt:'🚃 返回博多'},{t:'20:00',txt:'🌃 博多屋台'}],
+  ],
+  '名古屋': [
+    [{t:'08:30',txt:'🍳 コメダ珈琲早餐'},{t:'10:00',txt:'🏯 名古屋城'},{t:'12:30',txt:'🍤 味噌豬排午餐'},{t:'14:30',txt:'🎨 豐田產業技術紀念館'},{t:'17:00',txt:'🛍️ 榮區購物'},{t:'19:30',txt:'🌃 大須夜市'}],
+    [{t:'08:00',txt:'🚃 前往犬山城'},{t:'09:30',txt:'🏯 犬山城（國寶）'},{t:'12:00',txt:'🍜 犬山町老街午餐'},{t:'14:30',txt:'⛩️ 成田山名古屋別院'},{t:'17:00',txt:'🚃 返回名古屋'},{t:'19:30',txt:'🍺 矢場味噌豬排'}],
+    [{t:'09:00',txt:'🎢 樂高樂園（名古屋）'},{t:'12:30',txt:'🌭 園內午餐'},{t:'15:00',txt:'🎠 繼續遊樂'},{t:'17:30',txt:'🛍️ 名駅購物'},{t:'20:00',txt:'🌃 伏見居酒屋'}],
+  ],
+  '首爾': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🏯 景福宮 ＆ 韓服體驗'},{t:'12:00',txt:'🥘 北村韓屋村午餐'},{t:'14:00',txt:'📍 仁寺洞文化街'},{t:'17:00',txt:'🛍️ 明洞購物'},{t:'19:30',txt:'🥩 明洞烤肉'}],
+    [{t:'08:00',txt:'☕ 弘大咖啡館早午餐'},{t:'10:00',txt:'🎨 弘大街頭文化'},{t:'13:00',txt:'🥙 梨泰院異國料理'},{t:'15:00',txt:'🛍️ 江南COEX購物'},{t:'18:00',txt:'🌃 漢江公園炸雞'},{t:'20:30',txt:'🌙 漢江夜景'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'⛩️ 昌德宮秘苑'},{t:'12:00',txt:'🍤 鐘路傳統午餐'},{t:'14:00',txt:'🛕 曹溪寺'},{t:'16:30',txt:'🛍️ 東大門設計廣場'},{t:'19:30',txt:'🥘 部隊鍋晚餐'}],
+  ],
+  '釜山': [
+    [{t:'08:30',txt:'🍳 飯店早餐'},{t:'09:30',txt:'📍 廣安里海灘 ＆ 廣安大橋'},{t:'12:00',txt:'🥣 豬肉湯飯'},{t:'14:00',txt:'📍 甘川文化村'},{t:'17:00',txt:'🌅 海雲台夕陽'},{t:'19:00',txt:'🍶 海鮮煎餅配馬格利'}],
+    [{t:'06:30',txt:'🦀 機張早市海鮮'},{t:'09:30',txt:'⛩️ 海東龍宮寺'},{t:'12:00',txt:'🐟 海鮮定食'},{t:'15:00',txt:'🌊 尾浦海岸'},{t:'17:30',txt:'📍 影島天空步道'},{t:'19:30',txt:'🥩 西面烤肉街'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🏯 龍頭山公園 ＆ 釜山塔'},{t:'11:30',txt:'🦑 BIFF廣場魷魚餅'},{t:'13:00',txt:'🛍️ 國際市場掃貨'},{t:'16:00',txt:'⛵ 太宗臺遊船'},{t:'19:00',txt:'🌃 海雲台夜市'}],
+  ],
+  '濟州島': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🌋 城山日出峰'},{t:'12:00',txt:'🐟 濟州黑豬午餐'},{t:'14:00',txt:'⛩️ 城邑民俗村'},{t:'16:00',txt:'🏖️ 月汀里海灘'},{t:'19:00',txt:'🌃 제주시夜市'}],
+    [{t:'08:00',txt:'🌿 漢拿山登山'},{t:'12:00',txt:'🍱 山莊午餐'},{t:'14:30',txt:'♨️ 中文觀光區泡湯'},{t:'17:00',txt:'🌅 用嶋夕陽'},{t:'19:30',txt:'🦞 西歸浦海鮮'}],
+    [{t:'09:00',txt:'🐬 牛島一日遊出發'},{t:'10:00',txt:'💙 牛島燈塔 ＆ 珊瑚海岸'},{t:'12:30',txt:'🥜 땅콩아이스크림'},{t:'14:00',txt:'🏖️ 서빈백사海灘'},{t:'17:00',txt:'⛴️ 返回濟州'},{t:'19:30',txt:'🌃 동문재래시장'}],
+  ],
+  '曼谷': [
+    [{t:'08:00',txt:'🛶 昭披耶河快艇'},{t:'09:30',txt:'⛩️ 臥佛寺 ＆ 玉佛寺'},{t:'12:00',txt:'🍛 泰式炒河粉'},{t:'14:30',txt:'🏯 大皇宮'},{t:'17:00',txt:'💆 泰式按摩'},{t:'19:30',txt:'🌃 考山路夜市'}],
+    [{t:'07:00',txt:'🌅 恰圖恰週末市集'},{t:'10:00',txt:'🛍️ 市集掃貨'},{t:'13:00',txt:'🥭 芒果糯米飯'},{t:'15:00',txt:'💆 SPA放鬆'},{t:'18:00',txt:'🌆 ICON Siam購物'},{t:'20:00',txt:'🌙 湄南河夜遊'}],
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🕌 鄭王廟'},{t:'12:00',txt:'🥘 水上市場午餐'},{t:'14:30',txt:'🚤 湄南河遊船'},{t:'17:00',txt:'🍹 屋頂酒吧夕陽'},{t:'19:30',txt:'🌃 唐人街夜市'}],
+  ],
+  '清邁': [
+    [{t:'07:00',txt:'🌸 素帖山雙龍寺（日出）'},{t:'09:30',txt:'🐘 大象保育中心'},{t:'13:00',txt:'🍜 古城區午餐'},{t:'15:00',txt:'⛩️ 契迪隆寺'},{t:'17:30',txt:'💆 泰式按摩'},{t:'19:00',txt:'🌃 週日夜市'}],
+    [{t:'08:00',txt:'☕ 尼曼路咖啡館早餐'},{t:'10:00',txt:'🎨 清邁當代藝術館'},{t:'12:30',txt:'🍱 尼曼路午餐'},{t:'14:30',txt:'🛍️ 尼曼商圈購物'},{t:'17:00',txt:'🌅 布品寺夕陽'},{t:'19:30',txt:'🌃 叻差帕宵路夜市'}],
+    [{t:'07:30',txt:'🚵 郊外單車一日遊'},{t:'11:00',txt:'🌿 有機農場參觀'},{t:'13:00',txt:'🥗 農場午餐'},{t:'15:00',txt:'🍵 手作泰式烹飪課'},{t:'18:00',txt:'♨️ 溫泉泡湯'},{t:'20:00',txt:'🌙 古城區夜市'}],
+  ],
+  '普吉島': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'⛵ 皮皮島一日遊出發'},{t:'12:00',txt:'🥗 島上午餐'},{t:'14:00',txt:'🤿 浮潛'},{t:'16:30',txt:'⛵ 返回普吉'},{t:'19:30',txt:'🌃 芭東夜市'}],
+    [{t:'08:00',txt:'🌅 卡倫海灘晨泳'},{t:'10:00',txt:'🏖️ 卡塔海灘'},{t:'12:30',txt:'🦞 海鮮午餐'},{t:'14:30',txt:'🛍️ 芭東購物街'},{t:'17:00',txt:'🌅 大佛山夕陽'},{t:'19:30',txt:'🎭 西蒙秀表演'}],
+    [{t:'09:00',txt:'🚣 皮划艇 ＆ 紅樹林'},{t:'12:00',txt:'🍱 午餐'},{t:'14:00',txt:'🏄 衝浪課程'},{t:'16:30',txt:'💆 海灘SPA'},{t:'18:30',txt:'🌅 奈漢海灘夕陽'},{t:'20:00',txt:'🌃 拉威海鮮市場'}],
+  ],
+  '新加坡': [
+    [{t:'08:30',txt:'🍜 牛車水肉骨茶早餐'},{t:'10:00',txt:'🌿 濱海灣花園（超級樹）'},{t:'12:00',txt:'🦀 辣椒螃蟹午餐'},{t:'14:30',txt:'🛍️ 烏節路購物'},{t:'18:00',txt:'🌅 金沙酒店空中花園'},{t:'20:00',txt:'🌃 克拉碼頭夜遊'}],
+    [{t:'08:00',txt:'🦁 新加坡動物園'},{t:'12:00',txt:'🍱 周邊午餐'},{t:'14:00',txt:'🎢 聖淘沙環球影城'},{t:'17:00',txt:'🏖️ 西樂索海灘'},{t:'19:00',txt:'🌊 燈光水舞秀'},{t:'21:00',txt:'🌙 夜間動物園'}],
+    [{t:'09:00',txt:'🕌 小印度廟宇探索'},{t:'11:00',txt:'🕌 牛車水唐人街'},{t:'13:00',txt:'🍛 印度香料午餐'},{t:'15:00',txt:'🏛️ 國家美術館'},{t:'18:00',txt:'🌆 濱海灣夕陽'},{t:'20:00',txt:'🌃 老巴剎夜市'}],
+  ],
+  '上海': [
+    [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🌉 外灘漫步'},{t:'11:00',txt:'🏙️ 東方明珠塔'},{t:'13:00',txt:'🍜 南京東路午餐'},{t:'15:00',txt:'🛍️ 南京路步行街'},{t:'18:00',txt:'🎨 田子坊'},{t:'20:00',txt:'🌃 新天地夜景'}],
+    [{t:'08:00',txt:'🌿 靜安寺晨練'},{t:'09:30',txt:'⛩️ 靜安寺參觀'},{t:'11:30',txt:'🍱 靜安區午餐'},{t:'14:00',txt:'🛍️ 恒隆廣場購物'},{t:'17:00',txt:'🌆 上海中心大廈'},{t:'20:00',txt:'🌃 外灘夜景'}],
+    [{t:'09:00',txt:'🎨 M50創意園區'},{t:'11:30',txt:'🍜 蘇州河畔午餐'},{t:'13:30',txt:'🏛️ 上海博物館'},{t:'16:00',txt:'🛍️ 豫園商城'},{t:'18:30',txt:'🥟 城隍廟小吃'},{t:'20:30',txt:'🌃 外灘夜遊'}],
+  ],
+  '香港': [
+    [{t:'08:00',txt:'🍳 茶餐廳早餐'},{t:'09:30',txt:'🚡 太平山纜車'},{t:'12:00',txt:'🍱 蘭桂坊午餐'},{t:'14:00',txt:'🛍️ 銅鑼灣購物'},{t:'17:00',txt:'⛴️ 天星小輪'},{t:'19:30',txt:'🌃 維多利亞港夜景'}],
+    [{t:'08:30',txt:'🍵 港式早茶'},{t:'10:00',txt:'🕌 黃大仙廟'},{t:'12:00',txt:'🍜 旺角午餐'},{t:'14:00',txt:'🛍️ 女人街掃貨'},{t:'17:00',txt:'🌆 九龍公園'},{t:'19:30',txt:'🎆 幻彩詠香江燈光秀'}],
+    [{t:'09:00',txt:'🚢 大嶼山離島一日遊'},{t:'10:30',txt:'🛕 天壇大佛'},{t:'12:30',txt:'🍱 昂坪360午餐'},{t:'14:30',txt:'🏖️ 貝澳海灘'},{t:'17:00',txt:'⛴️ 返回香港'},{t:'19:30',txt:'🌃 尖沙咀夜市'}],
+  ],
+};
+
+// 通用模板（找不到城市專屬模板時使用）
+const GENERIC_TEMPLATES = [
+  [{t:'08:30',txt:'🍳 飯店早餐'},{t:'09:30',txt:'📍 當地知名景點'},{t:'12:00',txt:'🍜 道地午餐'},{t:'14:00',txt:'📍 下午文化體驗'},{t:'17:00',txt:'🛍️ 傍晚購物'},{t:'19:30',txt:'🌃 特色晚餐'}],
+  [{t:'07:30',txt:'🌅 早起特色景點（人少）'},{t:'10:00',txt:'☕ 咖啡館休息'},{t:'12:00',txt:'🍱 午餐'},{t:'14:00',txt:'🎨 藝文區漫遊'},{t:'17:00',txt:'🛍️ 購物街'},{t:'19:30',txt:'🌙 夜市探索'}],
+  [{t:'08:30',txt:'🍳 早餐'},{t:'09:30',txt:'🚌 郊外半日遊'},{t:'13:00',txt:'🥢 當地特色午餐'},{t:'15:00',txt:'♨️ 體驗活動'},{t:'18:00',txt:'🌅 觀景台夕陽'},{t:'20:00',txt:'🍺 道地晚餐'}],
+];
+
+// 取得城市模板（優先用城市專屬，否則通用）
+function getCityTemplate(dest, templateIdx) {
+  const templates = CITY_TEMPLATES[dest] || GENERIC_TEMPLATES;
+  return templates[templateIdx % templates.length];
+}
+
+// 快取 Key：城市_天數_抵達時段
+function buildCacheKey(dest, days, arrHour) {
+  const arrSlot = arrHour < 12 ? 'morning' : arrHour < 17 ? 'afternoon' : 'evening';
+  return `${dest}_${days}d_${arrSlot}`;
+}
+
+// 智能行程生成（Layer 1快取 → Layer 2模板 → Layer 3 Gemini）
+async function smartGenerateItinerary(dest, days, arrTime, retTime, area) {
+  const arrHour = parseInt(arrTime);
+  const cacheKey = buildCacheKey(dest, days, arrHour);
+
+  // Layer 1: 快取
+  const cached = getCachedItinerary(cacheKey);
+  if (cached) {
+    console.log('✅ 命中快取:', cacheKey);
+    return { data: cached, source: 'cache' };
+  }
+
+  // Layer 2: 內建模板（有城市專屬模板）
+  if (CITY_TEMPLATES[dest] || days <= 7) {
+    console.log('✅ 使用內建模板:', dest);
+    const result = {};
+    for (let i = 0; i < days; i++) {
+      if (i === 0 || i === days - 1) {
+        result[i] = null; // 第一天最後一天用固定邏輯
+      } else {
+        result[i] = getCityTemplate(dest, i - 1);
+      }
+    }
+    setCachedItinerary(cacheKey, result);
+    return { data: result, source: 'template' };
+  }
+
+  // Layer 3: Gemini（冷門城市 fallback）
+  console.log('⚠️ 呼叫 Gemini API:', dest);
+  const prompt = `請為${dest}${days}天旅遊規劃詳細行程。去程抵達時間：${arrTime}，回程出發時間：${retTime}，住宿區域：${area}。回傳純JSON格式：{"days":[{"dayIndex":0,"items":[{"t":"HH:MM","txt":"🏯 景點名稱"}]}]}。規則：dayIndex從0開始共${days}天，第一天從${arrTime}開始，最後一天在${retTime}前結束，每天4-6個行程點包含早午晚，文字用繁體中文帶emoji，只輸出JSON不要說明文字。`;
+  const rawText = await callGemini(prompt, 'itinerary');
+  const clean = rawText.replace(/```json|```/g,'').trim();
+  const parsed = JSON.parse(clean);
+  const result = {};
+  parsed.days.forEach(d => { result[d.dayIndex] = d.items; });
+  setCachedItinerary(cacheKey, result);
+  return { data: result, source: 'gemini' };
+}
+
+// ══════════════════════════════════════
+// 5. AI ITINERARY via Gemini Backend
+// ══════════════════════════════════════
 async function generateAIItinerary(){
   const days=getDays();
   if(!days||days<=0){alert('請先選擇出發與回程日期');return;}
   const dest=getDestName();
+  if(!dest||dest==='目的地'){alert('請先選擇目的地');return;}
   const btn=$('aiBtn'), status=$('aiStatus');
-  btn.disabled=true; btn.textContent='⏳ Gemini 規劃中…';
-  status.textContent='✨ Google Gemini 正在為您生成專屬行程，請稍候…';
+  btn.disabled=true; btn.textContent='⏳ 規劃中…';
+  status.textContent='✨ 智能行程規劃中，請稍候…';
   try{
     const flights=getFlights();
     const arrTime=flights[0]?.arr||'10:00';
     const retTime=flights[flights.length-1]?.dep||'18:00';
     const hotels=getHotels();
     const area=hotels[0]?.area||dest;
-    const prompt=`請為${dest}${days}天旅遊規劃詳細行程。去程抵達時間：${arrTime}，回程出發時間：${retTime}，住宿區域：${area}。回傳純JSON格式：{"days":[{"dayIndex":0,"items":[{"t":"HH:MM","txt":"🏯 景點或活動名稱"}]}]}。規則：dayIndex從0開始共${days}天，第一天從${arrTime}開始，最後一天在${retTime}前結束，每天4-6個行程點包含早午晚，文字用繁體中文帶emoji，只輸出JSON不要任何說明文字。`;
-    const rawText = await callGemini(prompt, 'itinerary');
-    const clean = rawText.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(clean);
-    if(parsed.days){
-      parsed.days.forEach(d=>{aiGeneratedDays[d.dayIndex]=d.items;});
-      rebuildDayRows();
-      status.textContent=`✅ Gemini 已生成 ${days} 天行程！可切換手動模式修改任何一天`;
-      localStorage.setItem('snoopy_ai_days', JSON.stringify(aiGeneratedDays));
-    }
+
+    const { data, source } = await smartGenerateItinerary(dest, days, arrTime, retTime, area);
+
+    // Apply to aiGeneratedDays (skip day 0 and last day if null)
+    Object.entries(data).forEach(([idx, items]) => {
+      if(items) aiGeneratedDays[parseInt(idx)] = items;
+    });
+
+    rebuildDayRows();
+
+    const sourceMsg = {
+      cache:    '✅ 已從快取載入行程（本次不耗 API）',
+      template: '✅ 已用內建模板生成行程（本次不耗 API）',
+      gemini:   '✅ Gemini 已生成行程！',
+    }[source] || '✅ 行程生成完成';
+    status.textContent = sourceMsg;
+    localStorage.setItem('snoopy_ai_days', JSON.stringify(aiGeneratedDays));
   }catch(e){
     status.textContent=`⚠️ 生成失敗：${e.message}`;
     console.error(e);
