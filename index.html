@@ -108,14 +108,26 @@ input:focus,select:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,14
 .hotel-recommend-btn{width:100%;padding:9px;background:linear-gradient(135deg,#4488CC,#2266AA);color:white;border:none;border-radius:11px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;margin-top:8px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .hotel-recommend-btn:hover{opacity:.9;transform:translateY(-1px);}
 .hotel-recommend-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-.hotel-recs{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
-.hotel-rec-card{background:white;border:2px solid #C8D8F0;border-radius:11px;padding:10px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px;}
+.hotel-recs{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.hotel-rec-card{background:white;border:2px solid #C8D8F0;border-radius:14px;padding:12px 14px;transition:all .15s;}
 .hotel-rec-card:hover{border-color:#4488CC;background:#F0F6FF;transform:translateX(2px);}
-.hotel-rec-card .rec-star{font-size:12px;color:#F0A020;}
-.hotel-rec-card .rec-name{font-size:13px;font-weight:800;color:var(--br);}
-.hotel-rec-card .rec-area{font-size:11px;color:#608090;font-weight:700;}
+.hotel-rec-card .rec-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.hotel-rec-card .rec-star{font-size:11px;color:#F0A020;}
+.hotel-rec-card .rec-name{font-size:13px;font-weight:900;color:var(--br);margin-top:2px;}
 .hotel-rec-card .rec-price{font-size:11px;color:var(--gr);font-weight:800;margin-top:2px;}
-.use-rec-btn{font-size:10px;background:var(--or);color:white;border:none;border-radius:7px;padding:3px 8px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;margin-left:auto;flex-shrink:0;}
+.hotel-rec-card .rec-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;}
+.hotel-rec-tag{font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#F0F6FF;color:#4488CC;border:1px solid #C8D8F0;}
+.hotel-rec-tag.green{background:#F0FFF4;color:#30A060;border-color:#A0DCA0;}
+.hotel-rec-tag.orange{background:#FFF8F0;color:#C07040;border-color:#FFD0A0;}
+.hotel-rec-tag.purple{background:#F5F0FF;color:#7040C0;border-color:#D0B8FF;}
+.hotel-rec-note{font-size:11px;color:#7A8090;margin-top:5px;line-height:1.5;}
+.hotel-rec-links{display:flex;gap:6px;margin-top:8px;}
+.hotel-rec-link{flex:1;text-align:center;padding:5px 0;border-radius:8px;font-size:11px;font-weight:800;text-decoration:none;transition:all .15s;}
+.hotel-rec-link.agoda{background:#E8F4FF;color:#0066CC;border:1.5px solid #B8D8FF;}
+.hotel-rec-link.booking{background:#E8FFF4;color:#006B4B;border:1.5px solid #A0DCC0;}
+.hotel-rec-link:hover{opacity:.8;transform:translateY(-1px);}
+.use-rec-btn{font-size:10px;background:var(--or);color:white;border:none;border-radius:7px;padding:4px 10px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;flex-shrink:0;}
+.hotel-cache-badge{font-size:10px;color:#A08060;font-weight:700;text-align:right;margin-top:4px;}
 
 /* ADD BUTTONS */
 .add-entry-btn{width:100%;padding:10px;background:none;border:2px dashed #FFB870;border-radius:13px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--tan);cursor:pointer;transition:all .15s;}
@@ -884,37 +896,140 @@ const HOTEL_DB = {
   '墨爾本':[{name:'墨爾本Crown塔酒店',stars:5,price:'NT$8,000+/晚',note:'賭場旁，亞拉河景'},{name:'The Langham墨爾本',stars:5,price:'NT$7,000+/晚',note:'南岸，河畔奢華'},{name:'聖科達海灘旅館',stars:3,price:'NT$2,000+/晚',note:'海灘步行，夜生活'},{name:'菲茨洛伊文青旅館',stars:3,price:'NT$1,800+/晚',note:'咖啡文化聚集地'},{name:'市中心Adelphi Hotel',stars:4,price:'NT$4,000+/晚',note:'設計感，購物街旁'}],
 };
 
-function recommendHotels(hid) {
+// Hotel recommendation cache (7 days)
+const HOTEL_REC_CACHE_PREFIX = 'snoopy_hrec_';
+const HOTEL_REC_CACHE_DAYS = 7;
+
+function getHotelCache(key) {
+  try {
+    const raw = localStorage.getItem(HOTEL_REC_CACHE_PREFIX + key);
+    if (!raw) return null;
+    const { data, expires } = JSON.parse(raw);
+    if (Date.now() > expires) { localStorage.removeItem(HOTEL_REC_CACHE_PREFIX + key); return null; }
+    return data;
+  } catch(e) { return null; }
+}
+
+function setHotelCache(key, data) {
+  try {
+    const expires = Date.now() + HOTEL_REC_CACHE_DAYS * 86400000;
+    localStorage.setItem(HOTEL_REC_CACHE_PREFIX + key, JSON.stringify({ data, expires }));
+  } catch(e) {}
+}
+
+function renderHotelCards(hotels, recs, dest, area, hid, fromCache) {
+  recs.innerHTML = '';
+  if (fromCache) {
+    const badge = document.createElement('div');
+    badge.className = 'hotel-cache-badge';
+    badge.textContent = '📦 快取資料（7天內有效）';
+    recs.appendChild(badge);
+  }
+  hotels.forEach(h => {
+    const stars = '⭐'.repeat(Math.min(Math.round(h.stars||4), 5));
+    const card = document.createElement('div');
+    card.className = 'hotel-rec-card';
+    const safeName = (h.name||'').replace(/'/g,"\'");
+    const safeArea = (h.area||area||dest).replace(/'/g,"\'");
+    const agodaUrl = `https://www.agoda.com/search?city=${encodeURIComponent(h.name+' '+dest)}`;
+    const bookingUrl = `https://www.booking.com/search.html?ss=${encodeURIComponent(h.name+' '+dest)}`;
+
+    // Build tag rows
+    const stationTag = h.station ? `<span class="hotel-rec-tag purple">🚇 ${h.station}</span>` : '';
+    const convTag = h.convenience ? `<span class="hotel-rec-tag green">🏪 ${h.convenience}</span>` : '';
+    const spotTags = (h.spots||[]).map(s=>`<span class="hotel-rec-tag orange">📍 ${s}</span>`).join('');
+
+    card.innerHTML = `
+      <div class="rec-header">
+        <div style="flex:1">
+          <div class="rec-star">${stars}</div>
+          <div class="rec-name">${h.name}</div>
+          <div class="rec-price">💰 ${h.price||'價格洽詢'}</div>
+        </div>
+        <button class="use-rec-btn" onclick="useHotelRec('${safeName}','${safeArea}',${hid})">使用</button>
+      </div>
+      ${h.note ? `<div class="rec-note">📝 ${h.note}</div>` : ''}
+      <div class="rec-tags">
+        ${stationTag}${convTag}${spotTags}
+      </div>
+      <div class="hotel-rec-links">
+        <a class="hotel-rec-link agoda" href="${agodaUrl}" target="_blank">Agoda 查價</a>
+        <a class="hotel-rec-link booking" href="${bookingUrl}" target="_blank">Booking 查價</a>
+      </div>`;
+    recs.appendChild(card);
+  });
+}
+
+async function recommendHotels(hid) {
   const btn = $(`recBtn_${hid}`);
   const recs = $(`hotelRecs_${hid}`);
   const dest = getDestName();
   const area = ($(`ha_${hid}`)?.value || '').trim();
-  btn.disabled = true; btn.textContent = '🔍 搜尋中…';
-  recs.innerHTML = '';
-  setTimeout(() => {
-    let hotels = HOTEL_DB[dest] || [];
-    if (hotels.length === 0) {
-      recs.innerHTML = `<div style="font-size:12px;color:#A08060;padding:8px;font-family:Nunito,sans-serif;">暫無「${dest}」的推薦資料，請手動輸入飯店名稱</div>`;
+
+  if (!dest || dest === '目的地') {
+    recs.innerHTML = '<div style="font-size:12px;color:#E05040;padding:8px;">請先選擇目的地</div>';
+    return;
+  }
+
+  // Check cache first
+  const cacheKey = `${dest}_${area||'all'}`;
+  const cached = getHotelCache(cacheKey);
+  if (cached) {
+    renderHotelCards(cached, recs, dest, area, hid, true);
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = '⏳ AI 查詢中…';
+  recs.innerHTML = '<div style="font-size:12px;color:#A08060;padding:8px;font-family:Nunito,sans-serif;">🤖 Gemini 正在搜尋推薦飯店…</div>';
+
+  try {
+    const resp = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'hotel',
+        prompt: `請推薦${dest}${area?area+'地區':''}5間評價優良的飯店。只回傳JSON陣列，每筆包含：
+name（飯店名稱，繁體中文或原名）、
+stars（星級1-5數字）、
+price（價格範圍如 NT$2000-3500/晚）、
+note（一句特色描述，繁體中文20字內）、
+area（所在區域）、
+station（最近地鐵或捷運站名稱及步行分鐘，如：新宿站 步行5分）、
+convenience（附近便利商店如：7-11、全家、OK）、
+spots（陣列，1-2個最近景點名稱）。
+只輸出JSON陣列，不要其他文字。`
+      })
+    });
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const text = data.text || '';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const hotels = JSON.parse(clean);
+
+    // Save to cache
+    setHotelCache(cacheKey, hotels);
+    renderHotelCards(hotels, recs, dest, area, hid, false);
+
+  } catch(e) {
+    // Fallback to built-in DB
+    const fallback = HOTEL_DB[dest] || [];
+    if (fallback.length > 0) {
+      const mapped = fallback.map(h => ({
+        name: h.name, stars: h.stars, price: h.price,
+        note: h.note, area: area||dest,
+        station: null, convenience: null, spots: []
+      }));
+      renderHotelCards(mapped, recs, dest, area, hid, false);
+      const badge = document.createElement('div');
+      badge.className = 'hotel-cache-badge';
+      badge.textContent = '⚠️ AI 查詢失敗，顯示內建資料';
+      recs.insertBefore(badge, recs.firstChild);
     } else {
-      hotels.forEach(h => {
-        const stars = '⭐'.repeat(h.stars);
-        const card = document.createElement('div');
-        card.className = 'hotel-rec-card';
-        const safeName = (h.name||'').replace(/'/g,"\'");
-        card.innerHTML = `
-          <div style="flex:1">
-            <div class="rec-star">${stars}</div>
-            <div class="rec-name">${h.name}</div>
-            <div class="rec-area">📍 ${dest}${area?' · '+area:''}</div>
-            <div style="font-size:11px;color:#7A8090;margin-top:2px;">${h.note||''}</div>
-            <div class="rec-price">${h.price||''}</div>
-          </div>
-          <button class="use-rec-btn" onclick="useHotelRec('${safeName}','${area||dest}',${hid})">使用</button>`;
-        recs.appendChild(card);
-      });
+      recs.innerHTML = `<div style="font-size:12px;color:#E05040;padding:8px;">查詢失敗：${e.message}</div>`;
     }
-    btn.disabled=false; btn.textContent='🏨 推薦飯店';
-  }, 300);
+  }
+  btn.disabled = false; btn.textContent = '🏨 推薦飯店';
 }
 
 function useHotelRec(name,area,hid){
