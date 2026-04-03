@@ -300,7 +300,7 @@ input:focus,select:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,14
 
   <!-- AI ITINERARY -->
   <div class="section-div">🤖 AI 智能行程規劃</div>
-  <button class="ai-gen-btn" id="aiBtn" onclick="generateAIItinerary()">✨ 智能生成行程</button>
+  <button class="ai-gen-btn" id="aiBtn" onclick="generateAIItinerary()">✨ AI 生成行程（Gemini 3.1 Flash-Lite）</button>
   <div class="ai-status" id="aiStatus"></div>
 
   <!-- DAY ROWS -->
@@ -1159,34 +1159,44 @@ async function generateAIItinerary(){
   const dest=getDestName();
   if(!dest||dest==='目的地'){alert('請先選擇目的地');return;}
   const btn=$('aiBtn'), status=$('aiStatus');
-  btn.disabled=true; btn.textContent='⏳ 規劃中…';
-  status.textContent='✨ 智能行程規劃中，請稍候…';
+  btn.disabled=true; btn.textContent='⏳ Gemini 規劃中…';
+  status.textContent='🤖 gemini-3.1-flash-lite-preview 正在生成專屬行程，請稍候…';
   try{
     const flights=getFlights();
     const arrTime=flights[0]?.arr||'10:00';
     const retTime=flights[flights.length-1]?.dep||'18:00';
     const hotels=getHotels();
     const area=hotels[0]?.area||dest;
-
-    const { data, source } = await smartGenerateItinerary(dest, days, arrTime, retTime, area);
-
-    // Apply to aiGeneratedDays (skip day 0 and last day if null)
-    Object.entries(data).forEach(([idx, items]) => {
-      if(items) aiGeneratedDays[parseInt(idx)] = items;
-    });
-
-    rebuildDayRows();
-
-    const sourceMsg = {
-      cache:    '✅ 已載入行程',
-      template: '✅ 已生成行程',
-      gemini:   '✅ Gemini 已生成行程！',
-    }[source] || '✅ 行程生成完成';
-    status.textContent = sourceMsg;
-    localStorage.setItem('snoopy_ai_days', JSON.stringify(aiGeneratedDays));
+    const prompt=`請為${dest}${days}天旅遊規劃詳細行程。去程抵達時間：${arrTime}，回程出發時間：${retTime}，住宿區域：${area}。回傳純JSON格式：{"days":[{"dayIndex":0,"items":[{"t":"HH:MM","txt":"🏯 景點或活動名稱"}]}]}。規則：dayIndex從0開始共${days}天，第一天從${arrTime}開始，最後一天在${retTime}前結束，每天4-6個行程點包含早午晚，文字用繁體中文帶emoji，只輸出JSON不要任何說明文字。`;
+    const rawText = await callGemini(prompt, 'itinerary');
+    const clean = rawText.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    if(parsed.days){
+      parsed.days.forEach(d=>{aiGeneratedDays[d.dayIndex]=d.items;});
+      rebuildDayRows();
+      status.textContent='✅ Gemini 3.1 Flash-Lite 已生成行程！可切換手動模式修改';
+      localStorage.setItem('snoopy_ai_days', JSON.stringify(aiGeneratedDays));
+    }
   }catch(e){
-    status.textContent=`⚠️ 生成失敗：${e.message}`;
-    console.error(e);
+    // 備援：使用內建模板
+    console.warn('Gemini 失敗，切換內建模板:', e.message);
+    status.textContent='⚠️ Gemini 額度用完，改用內建模板…';
+    try{
+      const flights=getFlights();
+      const arrTime=flights[0]?.arr||'10:00';
+      const retTime=flights[flights.length-1]?.dep||'18:00';
+      const hotels=getHotels();
+      const area=hotels[0]?.area||dest;
+      const { data } = await smartGenerateItinerary(dest, days, arrTime, retTime, area);
+      Object.entries(data).forEach(([idx, items]) => {
+        if(items) aiGeneratedDays[parseInt(idx)] = items;
+      });
+      rebuildDayRows();
+      status.textContent='✅ 已用內建模板生成行程（Gemini 額度已用完）';
+      localStorage.setItem('snoopy_ai_days', JSON.stringify(aiGeneratedDays));
+    }catch(e2){
+      status.textContent=`⚠️ 生成失敗：${e2.message}`;
+    }
   }
   btn.disabled=false; btn.textContent='✨ 重新生成行程';
 }
