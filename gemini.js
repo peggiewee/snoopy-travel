@@ -105,6 +105,6 @@ export default async function handler(req, res) {
     const text = await callGemini(prompt, maxTok, useSearch);
     return res.status(200).json({ text });
   } catch(e) {
-    return res.status(gResp?.status || 500).json({ error: e.message });
+    return res.status(500).json({ error: e.message });
   }
 }
