@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
   // ── GEMINI helper ──
   async function callGemini(p, maxTokens=800, useSearch=false) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1alpha/models/gemini-3.1-flash-lite-preview:generateContent?key=${GEMINI_KEY}`;
     const body = {
       contents: [{ parts: [{ text: p }] }],
       generationConfig: { temperature: 0.2, maxOutputTokens: maxTokens },
@@ -105,6 +105,6 @@ export default async function handler(req, res) {
     const text = await callGemini(prompt, maxTok, useSearch);
     return res.status(200).json({ text });
   } catch(e) {
-    return res.status(gResp?.status || 500).json({ error: e.message });
+    return res.status(500).json({ error: e.message });
   }
 }
